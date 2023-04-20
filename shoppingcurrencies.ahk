@@ -91,14 +91,15 @@ f7:: {
 f8:: {
     currentlink := UIA_Chrome("A").GetCurrentURL()
     for currency, stores in ymldb["Regions"]
-        for store, query in stores {
-            RegExMatch(currentlink, store, &regex)
-            if regex {
-                matchQ := query
-                MatchC := currency
-                break 2
+        if stores
+            for store, query in stores {
+                RegExMatch(currentlink, store, &regex)
+                if regex {
+                    matchQ := query
+                    MatchC := currency
+                    break 2
+                }
             }
-        }
     isset(MatchC) ? "" : failedmsg("Store not supported")
     switch MatchC {
         case baseCurrency: tCurrency := intCurrency
