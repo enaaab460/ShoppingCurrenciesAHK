@@ -4,7 +4,7 @@ Settings:				### Maintain number of spaces and tabs before the settings and afte
 		INT: USD		### Currency you want to convert to, from national currency
 	Conversion:			### Calculate cost of INT currency
 		BankRate_%: 10 		### Bank conversion commision 
-		BankMax: 10000000	### NBE max is EGP 10000 as of April 2023,use alternate market for more, or increase for testing
+		BankMax: 10000		### NBE max is EGP 10000 as of April 2023,use alternate market for more, or increase for testing
 		Alt_$: 0		### If you need to buy from alternate market, change value from 0. This setting disables bank conversion calculations
 	Overhead:			### Additional costs on top of list price
 		Mode: Ask		### Supported Modes: Traveler/Shipping/Both/None/Ask .Traveler doesn't pay LocalFees% or Shipping$, Shipping doesn't pay Traveler$  
