@@ -113,7 +113,7 @@ f8:: {
             upperendT := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, overheadS["IntFees_%"], overheadS["Traveler_$"])
             switch overheadmode {
                 case "Shipping": upperendT := ""
-                case "Traveler": upperendT := ""
+                case "Traveler": upperendS := ""
                 case "Both": v := 1
                 case "None": upperendS := "", upperendT := ""
             }
