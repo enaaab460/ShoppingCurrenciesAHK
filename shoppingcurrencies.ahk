@@ -162,7 +162,7 @@ f10:: {
             }
         }
     } else {
-        ; WinActivate "ahk_exe chrome.exe"
+        WinActivate "ahk_exe chrome.exe"
         send "^C"
         sleep 1000
         ToolTip "Choose Price"
