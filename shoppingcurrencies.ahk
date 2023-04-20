@@ -35,11 +35,11 @@ initiateyml() {
         altfactor := 1 + ymldb["Settings"]["Conversion"]["BankRate_%"] / 100
         usdrate := usdrate * altfactor
     }
-    local lastcur := convgui["fromCur"].value, currencylist := []
+    local lastcur := convgui["fromCur"].Text, currencylist := []
     for c in ymldb["Regions"]
         currencylist.Push(c)
     convgui["fromCur"].Delete(), convgui["fromCur"].Add(currencylist)
-    convgui["fromCur"].Choose(lastcur > 0 ? lastcur : intCurrency)
+    convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
     statusbar.SetText(" 1 " intCurrency " = " round(usdrate, 2) " " baseCurrency, 2)
 }
 

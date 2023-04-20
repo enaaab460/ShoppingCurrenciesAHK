@@ -43,5 +43,5 @@ Regions:				### To add stores to F8. Currencies can be empty just to add support
 		amazon.sa: *amazon
 		jarir.com: span.price_alignment
 	EUR:
-	CNY:
 	INR:
+	CNY:
