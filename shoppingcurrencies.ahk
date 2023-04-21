@@ -165,20 +165,21 @@ f10:: {
     } else {
         WinActivate "ahk_exe chrome.exe"
         send "^C"
-        sleep 1000
+        ; sleep 1000
+        chrome.WaitElement({ Name: "Toggle device toolbar", T: "Button" })
         ToolTip "Choose Price"
         KeyWait "LButton", "D"
         ToolTip
         sleep 200
-        slowerevent("{AppsKey}{c 2}{Right}{c 2}{Enter}", 200)
-        regex := RegExMatchAll(A_Clipboard, "\S+[.#]\S+")
+        slowerevent("{AppsKey}{Sleep 1}{c 2}{Right}{c 2}{Enter}", 100)
+        regex := RegExMatchAll(A_Clipboard, "\S*[.#]\S+")
         try targetspan := regex[-1][]
     }
     if isset(targetspan) {
         if MsgBox("Do you add this store before?", , 4) = "No"
-            savemsg A_Tab A_Tab strreplace(urlregex["host"], "www.") ': ' targetspan, "Press yes to copy, then paste the following to the correct region in the yml file`n"
-        else savemsg ', ' targetspan, "Press yes to copy, then paste the following to the correct store in the yml file`n"
-        settings()
+            res := savemsg(A_Tab A_Tab strreplace(urlregex["host"], "www.") ': ' targetspan, "Press yes to copy, then paste the following to the correct region in the yml file`n")
+        else res := savemsg(', ' targetspan, "Press yes to copy, then paste the following to the correct store in the yml file`n")
+        res = 0 ? "" :settings()
     } else
         MsgBox("Failed to find cssselector")
 }
