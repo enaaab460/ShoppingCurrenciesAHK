@@ -39,7 +39,9 @@ initiateyml() {
     for c in ymldb["Regions"]
         currencylist.Push(c)
     convgui["fromCur"].Delete(), convgui["fromCur"].Add(currencylist)
-    convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
+    try convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
+    catch
+        convgui["fromCur"].Choose(intCurrency)
     statusbar.SetText(" 1 " intCurrency " = " round(usdrate, 2) " " baseCurrency, 2)
 }
 
@@ -170,7 +172,7 @@ f10:: {
         ToolTip "Choose Price"
         KeyWait "LButton", "D"
         ToolTip
-        sleep 200
+        sleep 50
         slowerevent("{AppsKey}{Sleep 1}{c 2}{Right}{c 2}{Enter}", 100)
         regex := RegExMatchAll(A_Clipboard, "\S*[.#]\S+")
         try targetspan := regex[-1][]
