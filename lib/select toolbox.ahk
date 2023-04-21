@@ -36,6 +36,7 @@ failedmsg(Text, condition := 1) {
 savemsg(Text, Prompt := "") {
 	if MsgBox(prompt Text, "Save?", 4) = "Yes"
 		A_Clipboard := Text
+	else return 0
 }
 
 ModMsg(Text := "", Title := "", Options := 0, Buttons := []) {
