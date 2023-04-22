@@ -1,5 +1,4 @@
-﻿
-Regions:
+﻿Regions:
   EGP:
     noon.com/eg: &noon .sc-6073040e-1.jscnIS,.priceNow
     amazon.eg: &amazon span.a-price > span:nth-last-child(1)
