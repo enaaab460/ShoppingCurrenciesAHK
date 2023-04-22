@@ -104,7 +104,7 @@ f7:: {
 f8::
 chromeprice(*) {
     currentlink := UIA_Chrome("A").GetCurrentURL()
-    for currency, stores in Yaml("regions.yml")[1]
+    for currency, stores in Yaml("stores.yml")[1]
         if stores
             for store, query in stores {
                 RegExMatch(currentlink, store, &regex)
@@ -162,12 +162,12 @@ f9:: {
     failedmsg "Failed to find cssselector", !IsSet(targetspan)
     cur := StrUpper(mySelectInput("ComboBox", currencylist, , "Currency of store"))
     store := strreplace(urlregex["host"], "www.")
-    regionyml := Yaml("regions.yml")[1]
+    regionyml := Yaml("stores.yml")[1]
     regionyml.has(cur) ? "" : regionyml[cur] := Map()
     if regionyml[cur].has(store)
         regionyml[cur][store] .= ", " targetspan
     else
         regionyml[cur][store] := targetspan
-    FileOverwrite(Yaml(regionyml, 3), "regions.yml")
+    FileOverwrite(Yaml(regionyml, 3), "stores.yml")
     ; chromeprice()
 }

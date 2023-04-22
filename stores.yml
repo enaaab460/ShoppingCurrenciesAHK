@@ -1,9 +1,10 @@
-AED:
+﻿AED:
   amazon.ae: "span.a-price > span:nth-last-child(1)"
   noon.com/uae: ".sc-6073040e-1.jscnIS,.priceNow"
 EGP:
   2b.com: .price
   amazon.eg: "span.a-price > span:nth-last-child(1)"
+  arabcomputer.net: "div.elementor-element.elementor-element-e000220.elementor-widget__width-initial.elementor-widget.elementor-widget-heading"
   btech: "span.price-container"
   dream2000.com: span.price
   eg.pricena.com: ".price-value , .from , .value"
