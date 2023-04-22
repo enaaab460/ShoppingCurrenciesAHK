@@ -16,7 +16,7 @@ convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "
 convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(30)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
-statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settingsgui.Show("X1200") : "")
+statusbar.OnEvent("Click", (obj, info) => (info = 1) ? (settingsgui.Show(),convgui.Hide()) : "")
 
 InitiateYml() {
     global
@@ -81,7 +81,8 @@ settingsgui.SetFont("S18")
 settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "Mode", "IntFees_%", "Traveler_$", "LocalFees_%", "Shipping_$"]
 for editbox in settingsnames {
     settingsgui.AddText("xs y" A_Index * 40 - 36, editbox)
-    settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 y{} h36 w150 v{}", A_Index * 40 - 36, editbox), SettingsYml[editbox])
+    ; settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 y{} h36 w150 v{}", A_Index * 40 - 36, editbox), SettingsYml[editbox])
+    settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 yp h36 w150 v{}", editbox), SettingsYml[editbox])
 }
 settingsgui.AddButton("xs+120", "Save").OnEvent("Click", Saveset)
 Saveset(*) {
@@ -91,6 +92,7 @@ Saveset(*) {
     FileOverwrite(Yaml(SettingsYml, 2), "settings.yml")
     InitiateYml()
     calculateresult()
+    convgui.Show()
     settingsgui.Hide()
 }
 
@@ -103,6 +105,7 @@ f7:: {
 
 f8::
 chromeprice(*) {
+    WinActivate "ahk_exe chrome.exe"
     currentlink := UIA_Chrome("A").GetCurrentURL()
     for currency, stores in Yaml("stores.yml")[1]
         if stores
@@ -146,6 +149,7 @@ chromeprice(*) {
 }
 
 f9:: {
+    WinActivate "ahk_exe chrome.exe"
     chrome := UIA_Chrome("A")
     RegExMatch(chrome.GetCurrentURL(), "U)https?:\/\/(?:www\.)?(?<host>[\w.]+)\/", &urlregex)
     WinActivate "ahk_exe chrome.exe"
