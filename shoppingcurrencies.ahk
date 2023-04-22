@@ -18,25 +18,27 @@ convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settings() : "")
 
-initiateyml() {
+initiateini() {
     global
-    ymldb := yaml(strreplace(regexreplace(FileRead("shoppingcurrencies.yml"), "\t*###.*"), A_Tab, "    "))[1]
-    overheadS := ymldb["Settings"]["Overhead"]
-    baseCurrency := ymldb["Settings"]["Currencies"]["Base"]
-    intCurrency := ymldb["Settings"]["Currencies"]["INT"]
+    ini := "shoppingcurrencies.ini"
+    overheadS := Map()
+    for itm in ["Traveler_$", "LocalFees_%", "IntFees_%", "Shipping_$"]
+        overheadS[itm] := IniRead(ini, "Overhead", itm)
+    baseCurrency := IniRead(ini, "Currencies", "Base")
+    intCurrency := IniRead(ini, "Currencies", "INT")
     if (!FileExist("currency.yml") or !instr(FileGetTime("currency.yml", "C"), A_Year A_mon A_DD))
         Download "http://www.floatrates.com/daily/" baseCurrency ".json", "currency.yml"
     currencyjson := Yaml("currency.yml")
     usdrate := currencyjson[Strlower(intCurrency)]["inverseRate"]
-    if (custrate := ymldb["Settings"]["Conversion"]["Alt_$"]) > 0 {
+    if custrate := IniRead(ini, "Conversion", "Alt_$") > 0 {
         altfactor := custrate / usdrate
         usdrate := custrate
     } else {
-        altfactor := 1 + ymldb["Settings"]["Conversion"]["BankRate_%"] / 100
+        altfactor := 1 + IniRead(ini, "Conversion", "BankRate_%") / 100
         usdrate := usdrate * altfactor
     }
     local lastcur := convgui["fromCur"].Text, currencylist := []
-    for c in ymldb["Regions"]
+    for c in strsplit(IniRead(ini, "Currencies", "Regions"), ",")
         currencylist.Push(c)
     convgui["fromCur"].Delete(), convgui["fromCur"].Add(currencylist)
     try convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
@@ -70,19 +72,28 @@ calculateresult(*) {
             overhead := round(direct * ((1 + overheadS["LocalFees_%"] / altfactor / 100) * ((overheadS["IntFees_%"]) / 100 + 1)) + overheadS["Shipping_$"] * usdrate) - direct
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
-        if convgui["fromCur"].Text != baseCurrency and direct > ymldb["Settings"]["Conversion"]["BankMax"] and !custrate
+        if convgui["fromCur"].Text != baseCurrency and direct > IniRead(ini, "Conversion", "BankMax") and !custrate
             failedmsg "Price exceeds maximum exchange allowed by bank, change to altrate"
     }
 }
+
+
+
+settingsgui := Gui()
+settingsgui.SetFont("S18")
+for label in ["Base Currency", "Int Currency", "Regions", "Bank Rate", "Bank Max", "Alt $","Int Fees %","Traveler $","Local Fees %","Shipping $"]
+    settingsgui.AddText("xs", label)
+for editbox in ["Base","Int","Regions"]
+    settingsgui.AddEdit("x200 y+10 v" editbox)
+
 settings(*) {
-    run "notepad.exe " "shoppingcurrencies.yml", , "Max"
-    WinWaitActive "ahk_exe notepad.exe"
-    WinWaitClose
-    initiateyml()
+    settingsgui.Show("h400 w400")
+    WinWaitClose settingsgui
+    initiateini()
     calculateresult()
 }
 
-initiateyml()
+initiateini()
 convgui.Show()
 #HotIf WinActive("ahk_exe chrome.exe")
 f7:: {
@@ -90,100 +101,3 @@ f7:: {
     convgui.Show()
     KeyWait(ThisHotkey, "t0.3")
 }
-f8:: {
-    currentlink := UIA_Chrome("A").GetCurrentURL()
-    for currency, stores in ymldb["Regions"]
-        if stores
-            for store, query in stores {
-                RegExMatch(currentlink, store, &regex)
-                if regex {
-                    matchQ := query
-                    MatchC := currency
-                    break 2
-                }
-            }
-    isset(MatchC) ? "" : failedmsg("Store not supported")
-    switch MatchC {
-        case baseCurrency: tCurrency := intCurrency
-            convMode := 1 / (usdrate / (custrate > 0 ? 1 : altfactor))
-            upperendS := "", upperendT := ""
-        default: tCurrency := baseCurrency
-            overheadmode := ymldb["Settings"]["Overhead"]["Mode"]
-            overheadmode := overheadmode = "Ask" ? mySelectInput("DropDownList", ["Shipping", "Traveler", "Both", "None"], , "Select Conversion Mode, or keep empty to cancel") : overheadmode
-            convMode := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
-            upperendS := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + overheadS["LocalFees_%"] / altfactor / 100) * (overheadS["IntFees_%"] / 100 + 1), overheadS["Shipping_$"])
-            upperendT := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, overheadS["IntFees_%"], overheadS["Traveler_$"])
-            switch overheadmode {
-                case "Shipping": upperendT := ""
-                case "Traveler": upperendS := ""
-                case "Both": v := 1
-                case "None": upperendS := "", upperendT := ""
-            }
-    }
-    jscmd := Format('
-    ( LTrim Join`s
-        for (target of document.querySelectorAll("{1}")){
-            targetEGP = target.innerText.replace(",","").match(/\d+/);if (targetEGP) targetEGP = targetEGP[0]; else continue;
-            directconv = Math.round(targetEGP*{3});
-            target.textContent += "\n({2} " + directconv {4} {5} + ")";
-            if (directconv >= {6} && {7}) {window.alert("EGP " + directconv + " exceeds maximum exchange allowed by bank, change to altrate")}else{void(0);};
-        }
-    )', MatchQ, tCurrency, convMode, upperendS, upperendT, ymldb["Settings"]["Conversion"]["BankMax"], !(custrate or MatchC = baseCurrency) ? 1 : 0)
-    UIA_Chrome("A").JSExecute(jscmd)
-    ; savemsg jscmd
-}
-f9::
-f10:: {
-    chrome := UIA_Chrome("A")
-    RegExMatch(chrome.GetCurrentURL(), "U)https?://(www\.)?(?<host>[\w.]+)\/", &urlregex)
-    if ThisHotkey = "f10" {
-        RegExMatch(copynow(, 0.2), "[\d.,]+", &regex)
-        coo := regex[]
-        firstjs := format("
-        ( LTrim Join`s
-        spanClassArray = new Set();
-        for (span of document.querySelectorAll('{}')){
-            if (span.innerText.search('{}') == -1 || (spanY = span.getBoundingClientRect().y) < 0 || spanY > 1040 || !(spanA = span.attributes[0])) continue;
-            if (spanC = span.className) suffix = '.' + spanC.replaceAll(' ','.');
-            else if (spanI = span.id) suffix = '#' + spanI;
-            else suffix = '[' + spanA.name + '="' + spanA.value + '"]';
-            spanClassArray.add(span.tagName.toLowerCase() + suffix);
-        }
-    )", "p,span,a,td,li,ul,strong", okinputbox("Write the price currently onscreen", , , coo))
-    chrome.JSExecute(firstjs ';void(0);')
-        spanArray := chrome.JSReturnThroughClipboard('Array.from(spanClassArray).join("|||")')
-        spanarray := StrSplit(spanArray, "|||")
-        loop spanarray.Length {
-            jscmd := Format('for (span of document.querySelectorAll("{1}")) span.innerText = "SUCCESS";void(0);', span := spanarray[-A_Index])
-            chrome.JSExecute(jscmd)
-            if (res := ModMsg("Testing cssselector " span "`nIf target price changed to sucess, Choose `"Success`"`nIf page broke down, Choose `"Refresh`"`nOtherwise choose `"Next`"", , 4096, ["&Success", "&Refresh", "&Next"])) = 1 {
-                targetspan := span
-                break
-            } else if res = 2 {
-                chrome.Reload()
-                chrome.WaitPageLoad()
-            }
-        }
-    } else {
-        WinActivate "ahk_exe chrome.exe"
-        send "^C"
-        ; sleep 1000
-        chrome.WaitElement({ Name: "Toggle device toolbar", T: "Button" })
-        ToolTip "Choose Price"
-        KeyWait "LButton", "D"
-        ToolTip
-        sleep 50
-        slowerevent("{AppsKey}{Sleep 1}{c 2}{Right}{c 2}{Enter}", 100)
-        regex := RegExMatchAll(A_Clipboard, "\S*[.#]\S+")
-        try targetspan := regex[-1][]
-    }
-    if isset(targetspan) {
-        if MsgBox("Do you add this store before?", , 4) = "No"
-            res := savemsg(A_Tab A_Tab strreplace(urlregex["host"], "www.") ': ' targetspan, "Press yes to copy, then paste the following to the correct region in the yml file`n")
-        else res := savemsg(', ' targetspan, "Press yes to copy, then paste the following to the correct store in the yml file`n")
-        res = 0 ? "" :settings()
-    } else
-        MsgBox("Failed to find cssselector")
-}
-
-/* asdfdlskafj;asdlkfjasd;lfkjas;lfkjlskafdja; */
