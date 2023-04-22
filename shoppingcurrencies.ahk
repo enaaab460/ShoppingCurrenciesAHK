@@ -1,8 +1,8 @@
 SetWorkingDir A_WorkingDir
 #Include "Lib\select toolbox.ahk"
+DetectHiddenWindows 0
 
 A_TrayMenu.add("Converter", (*) => convgui.show())
-A_TrayMenu.add("Settings", settings)
 A_TrayMenu.default := "Converter"
 A_TrayMenu.ClickCount := 1
 
@@ -16,29 +16,29 @@ convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "
 convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(30)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
-statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settings() : "")
+statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settingsgui.Show("X1200") : "")
 
+settingsnames := ["Base", "INT", "Regions", "BankRate_%", "BankMax", "Alt_$", "IntFees_%", "Traveler_$", "LocalFees_%", "Shipping_$"]
 initiateini() {
     global
-    ini := "shoppingcurrencies.ini"
-    overheadS := Map()
-    for itm in ["Traveler_$", "LocalFees_%", "IntFees_%", "Shipping_$"]
-        overheadS[itm] := IniRead(ini, "Overhead", itm)
-    baseCurrency := IniRead(ini, "Currencies", "Base")
-    intCurrency := IniRead(ini, "Currencies", "INT")
+    SettingsIni := Map()
+    for itm in settingsnames
+        SettingsIni[itm] := IniRead("shoppingcurrencies.ini", "Settings", itm)
+    baseCurrency := SettingsIni["Base"]
+    intCurrency := SettingsIni["INT"]
     if (!FileExist("currency.yml") or !instr(FileGetTime("currency.yml", "C"), A_Year A_mon A_DD))
         Download "http://www.floatrates.com/daily/" baseCurrency ".json", "currency.yml"
     currencyjson := Yaml("currency.yml")
     usdrate := currencyjson[Strlower(intCurrency)]["inverseRate"]
-    if custrate := IniRead(ini, "Conversion", "Alt_$") > 0 {
+    if custrate := SettingsIni["Alt_$"] > 0 {
         altfactor := custrate / usdrate
         usdrate := custrate
     } else {
-        altfactor := 1 + IniRead(ini, "Conversion", "BankRate_%") / 100
+        altfactor := 1 + SettingsIni["BankRate_%"] / 100
         usdrate := usdrate * altfactor
     }
     local lastcur := convgui["fromCur"].Text, currencylist := []
-    for c in strsplit(IniRead(ini, "Currencies", "Regions"), ",")
+    for c in strsplit(SettingsIni["Regions"], ",")
         currencylist.Push(c)
     convgui["fromCur"].Delete(), convgui["fromCur"].Add(currencylist)
     try convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
@@ -67,33 +67,33 @@ calculateresult(*) {
         out := regexreplace(convgui["fromVal"].Text, "\.\d*|,")
         direct := round(out * convrate, 2)
         if convgui["Overhead"].Text = "Traveler"
-            overhead := round(overheadS["Traveler_$"] * usdrate) + (direct * (overheadS["IntFees_%"] / 100))
+            overhead := round(SettingsIni["Traveler_$"] * usdrate) + (direct * (SettingsIni["IntFees_%"] / 100))
         else if convgui["Overhead"].Text = "Shipping"
-            overhead := round(direct * ((1 + overheadS["LocalFees_%"] / altfactor / 100) * ((overheadS["IntFees_%"]) / 100 + 1)) + overheadS["Shipping_$"] * usdrate) - direct
+            overhead := round(direct * ((1 + SettingsIni["LocalFees_%"] / altfactor / 100) * ((SettingsIni["IntFees_%"]) / 100 + 1)) + SettingsIni["Shipping_$"] * usdrate) - direct
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
-        if convgui["fromCur"].Text != baseCurrency and direct > IniRead(ini, "Conversion", "BankMax") and !custrate
+        if convgui["fromCur"].Text != baseCurrency and direct > SettingsIni["BankMax"] and !custrate
             failedmsg "Price exceeds maximum exchange allowed by bank, change to altrate"
     }
 }
 
-
+initiateini()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
-for label in ["Base Currency", "Int Currency", "Regions", "Bank Rate", "Bank Max", "Alt $","Int Fees %","Traveler $","Local Fees %","Shipping $"]
-    settingsgui.AddText("xs", label)
-for editbox in ["Base","Int","Regions"]
-    settingsgui.AddEdit("x200 y+10 v" editbox)
-
-settings(*) {
-    settingsgui.Show("h400 w400")
-    WinWaitClose settingsgui
+for label in ["Base Currency", "Int Currency", "Regions", "Bank Rate", "Bank Max", "Alt $", "Int Fees %", "Traveler $", "Local Fees %", "Shipping $"]
+    settingsgui.AddText("xs y" A_Index * 49 - 36, label)
+for editbox in settingsnames
+    settingsgui.AddEdit(Format("x200 y{} h36 w100 v{}", A_Index * 49 - 36, editbox), SettingsIni[editbox])
+settingsgui.AddButton("xs+100", "Save").OnEvent("Click", Saveset)
+Saveset(*) {
+    for sett in settingsnames
+        IniWrite settingsgui[sett].Text,"shoppingcurrencies.ini","Settings",sett
+    settingsgui.Hide()
     initiateini()
     calculateresult()
 }
 
-initiateini()
 convgui.Show()
 #HotIf WinActive("ahk_exe chrome.exe")
 f7:: {
