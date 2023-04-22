@@ -7,5 +7,3 @@ You can download [Autohotkey v2](https://www.autohotkey.com/) directly to avoid 
 Uses http://www.floatrates.com/json-feeds.html for currency conversion rates table
 
 Arabic showcase on [youtube](https://youtu.be/aUnqe-4W_M0)
-
-Mini2 Branch only has the main calculator mode, with no integration with Chrome and no supported stores.
