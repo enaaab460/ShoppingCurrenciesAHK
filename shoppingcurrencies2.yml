@@ -6,7 +6,7 @@ Settings:
   Conversion: "<a href=\"http://www.floatrates.com/json-feeds.html\">RATES</a>"
   Currencies: "<a href=\"https://www.iban.com/currency-codes\">IBAN</a>"
   INT: USD
-  "IntFees_%": 20
+  "IntFees_%": 0
   "LocalFees_%": 14
   Overhead: "<a href=\"https://www.ugotbox.com/help/\">UGOTBOX</a>"
   Regions: EGP,USD,SAR,AED,EUR,INR,CNY

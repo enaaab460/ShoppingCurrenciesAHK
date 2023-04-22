@@ -1,0 +1,31 @@
+﻿
+Regions:
+  EGP:
+    noon.com/eg: &noon .sc-6073040e-1.jscnIS,.priceNow
+    amazon.eg: &amazon span.a-price > span:nth-last-child(1)
+    hatla2ee: .flexer strong , span+ span
+    2b.com: .price
+    eg.pricena.com: .price-value , .from , .value
+    btech: span.price-container
+    egprices: .text-left,.contentBox .columns .egp-prod-title
+    jumia.com.eg: span.-b.-ltr.-tal.-fs24,.prc,.old,.prc::after
+    rayashop: span.currency.mt-2,.currency.ml-1
+    imediastores: bdi
+    egyptlaptop: .pr-col
+    olx.com.eg: ._95eae7db
+    egyptlaptop.com: span.ty-price
+    dream2000.com: span.price
+  USD:
+    amazon.com: *amazon
+    bestbuy: .priceView-customer-price span
+    ebay: .x-price-primary .ux-textspans,.merch-price,.ux-textspans--STRIKETHROUGH,.s-item__price
+    newegg.com: li.price-current
+    newenergyeg.com: span.new-price
+  GBP:
+    amazon.co.uk: *amazon
+  AED:
+    noon.com/uae: *noon
+    amazon.ae: *amazon
+  SAR:
+    amazon.sa: *amazon
+    jarir.com: span.price_alignment

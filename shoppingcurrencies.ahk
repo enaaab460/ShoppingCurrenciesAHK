@@ -18,7 +18,6 @@ convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settingsgui.Show("X1200") : "")
 
-settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "IntFees_%", "Traveler_$", "LocalFees_%", "Shipping_$"]
 initiateini() {
     global
     SettingsIni := Yaml("shoppingcurrencies2.yml")[1]["Settings"]
@@ -79,21 +78,21 @@ initiateini()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
+settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "IntFees_%", "Traveler_$", "LocalFees_%", "Shipping_$"]
 for editbox in settingsnames {
     settingsgui.AddText("xs y" A_Index * 40 - 36, editbox)
     settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 y{} h36 w150 v{}", A_Index * 40 - 36, editbox), SettingsIni[editbox])
 }
 settingsgui.AddButton("xs+100", "Save").OnEvent("Click", Saveset)
 Saveset(*) {
-    newsettings := Map("Settings",Map())
-    for key, value in SettingsIni {
-        try newsettings["Settings"][key] := settingsgui[key].Text
-    }
+    newsettings := Map("Settings", Map())
+    for key, value in SettingsIni
+        newsettings["Settings"][key] := settingsgui[key].Text
     FileDelete("shoppingcurrencies2.yml")
     FileAppend(Yaml(newsettings, 2), "shoppingcurrencies2.yml")
     initiateini()
-    settingsgui.Hide()
     calculateresult()
+    settingsgui.Hide()
 }
 
 convgui.Show()
