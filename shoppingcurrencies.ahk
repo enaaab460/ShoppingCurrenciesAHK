@@ -18,12 +18,10 @@ convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settingsgui.Show("X1200") : "")
 
-settingsnames := ["Base", "INT", "Regions", "BankRate_%", "BankMax", "Alt_$", "IntFees_%", "Traveler_$", "LocalFees_%", "Shipping_$"]
+settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "IntFees_%", "Traveler_$", "LocalFees_%", "Shipping_$"]
 initiateini() {
     global
-    SettingsIni := Map()
-    for itm in settingsnames
-        SettingsIni[itm] := IniRead("shoppingcurrencies.ini", "Settings", itm)
+    SettingsIni := Yaml("shoppingcurrencies2.yml")[1]["Settings"]
     baseCurrency := SettingsIni["Base"]
     intCurrency := SettingsIni["INT"]
     if (!FileExist("currency.yml") or !instr(FileGetTime("currency.yml", "C"), A_Year A_mon A_DD))
@@ -81,17 +79,21 @@ initiateini()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
-for label in ["Base Currency", "Int Currency", "Regions", "Bank Rate", "Bank Max", "Alt $", "Int Fees %", "Traveler $", "Local Fees %", "Shipping $"]
-    settingsgui.AddText("xs y" A_Index * 49 - 36, label)
-for editbox in settingsnames
-    settingsgui.AddEdit(Format("x200 y{} h36 w100 v{}", A_Index * 49 - 36, editbox), SettingsIni[editbox])
+for editbox in settingsnames {
+    settingsgui.AddText("xs y" A_Index * 40 - 36, editbox)
+    settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 y{} h36 w150 v{}", A_Index * 40 - 36, editbox), SettingsIni[editbox])
+}
 settingsgui.AddButton("xs+100", "Save").OnEvent("Click", Saveset)
 Saveset(*) {
-    for sett in settingsnames
-        IniWrite settingsgui[sett].Text,"shoppingcurrencies.ini","Settings",sett
+    newsettings := Map("Settings",Map())
+    for key, value in SettingsIni {
+        try newsettings["Settings"][key] := settingsgui[key].Text
+    }
+    FileDelete("shoppingcurrencies2.yml")
+    FileAppend(Yaml(newsettings, 2), "shoppingcurrencies2.yml")
     initiateini()
-    calculateresult()
     settingsgui.Hide()
+    calculateresult()
 }
 
 convgui.Show()
