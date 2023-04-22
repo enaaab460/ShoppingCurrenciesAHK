@@ -20,10 +20,10 @@ statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settingsgui.Show("X1200")
 
 initiateini() {
     global
-    SettingsIni := Yaml("shoppingcurrencies2.yml")[1]["Settings"]
+    SettingsIni := Yaml("shoppingcurrencies.yml")[1]["Settings"]
     baseCurrency := SettingsIni["Base"]
     intCurrency := SettingsIni["INT"]
-    if (!FileExist("currency.yml") or !instr(FileGetTime("currency.yml", "C"), A_Year A_mon A_DD))
+    if (!FileExist("currency.yml") or !instr(FileGetTime("currency.yml", "M"), A_Year A_mon A_DD))
         Download "http://www.floatrates.com/daily/" baseCurrency ".json", "currency.yml"
     currencyjson := Yaml("currency.yml")
     usdrate := currencyjson[Strlower(intCurrency)]["inverseRate"]
@@ -83,14 +83,12 @@ for editbox in settingsnames {
     settingsgui.AddText("xs y" A_Index * 40 - 36, editbox)
     settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 y{} h36 w150 v{}", A_Index * 40 - 36, editbox), SettingsIni[editbox])
 }
-settingsgui.AddButton("xs+100", "Save").OnEvent("Click", Saveset)
+settingsgui.AddButton("xs+120", "Save").OnEvent("Click", Saveset)
 Saveset(*) {
-    newsettings := Map("Settings", Map())
+    global SettingsIni
     for key, value in SettingsIni
-        newsettings["Settings"][key] := settingsgui[key].Text
-    FileDelete("shoppingcurrencies2.yml")
-    FileAppend(Yaml(newsettings, 2), "shoppingcurrencies2.yml")
-    initiateini()
+        SettingsIni[key] := settingsgui[key].Text ? settingsgui[key].Text : 0
+    fileoverwrite(Yaml(Map("Settings", SettingsIni), 2), "shoppingcurrencies.yml")
     calculateresult()
     settingsgui.Hide()
 }
