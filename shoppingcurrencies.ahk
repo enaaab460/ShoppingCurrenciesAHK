@@ -161,13 +161,10 @@ f9:: {
     try targetspan := regex[-1][]
     failedmsg "Failed to find cssselector", !IsSet(targetspan)
     cur := StrUpper(mySelectInput("ComboBox", currencylist, , "Currency of store"))
-    store := strreplace(urlregex["host"], "www.")
+    store := okinputbox("Confirm that the url is correct and specific to region", , , strreplace(urlregex["host"], "www."))
     regionyml := Yaml("stores.yml")[1]
     regionyml.has(cur) ? "" : regionyml[cur] := Map()
-    if regionyml[cur].has(store)
-        regionyml[cur][store] .= ", " targetspan
-    else
-        regionyml[cur][store] := targetspan
+    regionyml[cur].has(store) ? regionyml[cur][store] .= ", " targetspan : regionyml[cur][store] := targetspan
     FileOverwrite(Yaml(regionyml, 3), "stores.yml")
     ; chromeprice()
 }
