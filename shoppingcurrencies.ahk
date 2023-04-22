@@ -152,7 +152,6 @@ f9:: {
     WinActivate "ahk_exe chrome.exe"
     chrome := UIA_Chrome("A")
     RegExMatch(chrome.GetCurrentURL(), "U)https?:\/\/(?:www\.)?(?<host>[\w.]+)\/", &urlregex)
-    WinActivate "ahk_exe chrome.exe"
     send "^C"
     sleep 200
     chrome.WaitElement({ Name: "Toggle device toolbar", T: "Button" })
