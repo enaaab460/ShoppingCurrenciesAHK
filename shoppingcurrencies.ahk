@@ -20,7 +20,7 @@ statusbar.OnEvent("Click", (obj, info) => (info = 1) ? settingsgui.Show("X1200")
 
 InitiateYml() {
     global
-    SettingsYml := Yaml("settings.yml")[1]["Settings"]
+    SettingsYml := Yaml("settings.yml")[1]
     baseCurrency := SettingsYml["Base"]
     intCurrency := SettingsYml["INT"]
     if (!FileExist("currency.yml") or !instr(FileGetTime("currency.yml", "M"), A_Year A_mon A_DD))
@@ -88,7 +88,7 @@ Saveset(*) {
     global SettingsYml
     for key, value in SettingsYml
         SettingsYml[key] := settingsgui[key].Text ? settingsgui[key].Text : 0
-    FileOverwrite(Yaml(Map("Settings", SettingsYml), 2), "settings.yml")
+    FileOverwrite(Yaml(SettingsYml, 2), "settings.yml")
     InitiateYml()
     calculateresult()
     settingsgui.Hide()
