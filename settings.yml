@@ -1,0 +1,14 @@
+Alt_$: 0
+BankMax: 10000
+BankRate_%: 10
+Base: EGP
+Conversion: "<a href=\"http://www.floatrates.com/json-feeds.html\">RATES</a>"
+Currencies: "<a href=\"https://www.iban.com/currency-codes\">IBAN</a>"
+INT: USD
+"IntFees_%": 10
+"LocalFees_%": 14
+Mode: Traveler
+Overhead: "<a href=\"https://www.ugotbox.com/help/\">UGOTBOX</a>"
+Regions: EGP,USD,SAR,AED,EUR,INR,CNY,JPY
+Shipping_$: 100
+Traveler_$: 100

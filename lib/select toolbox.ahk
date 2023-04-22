@@ -84,5 +84,10 @@ okinputbox(Prompt?, Title?, Options := "h100", Default?) {
 	Exit
 }
 
+FileOverwrite(Text,Filename){
+	try FileDelete Filename
+	FileAppend Text,Filename
+}
+
 ThousandsSep(x, s := ",") => RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 
