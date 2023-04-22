@@ -89,9 +89,9 @@ settingsgui.AddButton("xs+100", "Save").OnEvent("Click", Saveset)
 Saveset(*) {
     for sett in settingsnames
         IniWrite settingsgui[sett].Text,"shoppingcurrencies.ini","Settings",sett
-    settingsgui.Hide()
     initiateini()
     calculateresult()
+    settingsgui.Hide()
 }
 
 convgui.Show()
