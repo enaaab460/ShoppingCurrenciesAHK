@@ -35,7 +35,7 @@ InitiateYml() {
         usdrate := usdrate * altfactor
     }
     local lastcur := convgui["fromCur"].Text
-    currencylist:= strsplit(SettingsYml["Regions"], ",")
+    currencylist := strsplit(SettingsYml["Regions"], ",")
     convgui["fromCur"].Delete(), convgui["fromCur"].Add(currencylist)
     try convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
     catch
@@ -74,6 +74,7 @@ calculateresult(*) {
 }
 
 InitiateYml()
+convgui.Show()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
@@ -93,13 +94,13 @@ Saveset(*) {
     settingsgui.Hide()
 }
 
-convgui.Show()
 #HotIf WinActive("ahk_exe chrome.exe")
 f7:: {
     convgui["fromVal"].Text := RegExReplace(copynow(, 0.2), "[^\d,.]"), calculateresult()
     convgui.Show()
     KeyWait(ThisHotkey, "t0.3")
 }
+
 f8::
 chromeprice(*) {
     currentlink := UIA_Chrome("A").GetCurrentURL()
@@ -143,6 +144,7 @@ chromeprice(*) {
     UIA_Chrome("A").JSExecute(jscmd)
     ; savemsg jscmd
 }
+
 f9:: {
     chrome := UIA_Chrome("A")
     RegExMatch(chrome.GetCurrentURL(), "U)https?:\/\/(?:www\.)?(?<host>[\w.]+)\/", &urlregex)
@@ -158,7 +160,7 @@ f9:: {
     regex := RegExMatchAll(A_Clipboard, "\S*[.#]\S+")
     try targetspan := regex[-1][]
     failedmsg "Failed to find cssselector", !IsSet(targetspan)
-    cur := StrUpper(mySelectInput("ComboBox",currencylist,,"Currency of store"))
+    cur := StrUpper(mySelectInput("ComboBox", currencylist, , "Currency of store"))
     store := strreplace(urlregex["host"], "www.")
     regionyml := Yaml("regions.yml")[1]
     regionyml.has(cur) ? "" : regionyml[cur] := Map()
