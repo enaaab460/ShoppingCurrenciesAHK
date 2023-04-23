@@ -1,4 +1,4 @@
-﻿AED:
+AED:
   amazon.ae: "span.a-price > span:nth-last-child(1)"
   noon.com/uae: ".sc-6073040e-1.jscnIS,.priceNow"
 EGP:
@@ -10,6 +10,7 @@ EGP:
   eg.pricena.com: ".price-value , .from , .value"
   egprices.com: "span.egp-prod-title"
   egyptlaptop.com: "div.ut2-gl__price.pr-col"
+  google.com: "span.DFlfde.SwHCTb"
   imediastores: bdi
   jumia.com.eg: "span.-b.-ltr.-tal.-fs24,.prc,.old,.prc::after"
   noon.com/eg: ".sc-6073040e-1.jscnIS,.priceNow"
