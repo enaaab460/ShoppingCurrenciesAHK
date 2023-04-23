@@ -100,7 +100,7 @@ for editbox in settingsnames {
 }
 settingsgui.AddButton("xs+120", "Save").OnEvent("Click", Saveset)
 settingsgui.OnEvent("Close", (*) => convgui.Show())
-settingsstatus := settingsgui.AddStatusBar(, "Updated on:" updatedate)
+settingsstatus := settingsgui.AddStatusBar(, "Updated on: " updatedate)
 settingsstatus.OnEvent("Click", (*) => run("https://github.com/enaaab460/ShoppingCurrenciesAHK"))
 settingsstatus.SetIcon("lib\github.png", , 1)
 Saveset(*) {

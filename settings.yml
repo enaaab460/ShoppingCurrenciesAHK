@@ -1,6 +1,5 @@
 Alt_$: 0
 BankMax: 10000
-BankInfo: https://www.almasryalyoum.com/news/details/2791816
 BankRate_%: 10
 Base: EGP
 Conversion: "<a href=\"http://www.floatrates.com/json-feeds.html\">RATES</a>"
