@@ -86,10 +86,10 @@ convgui.Show()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
-settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "Mode", "IntFees_%", "Traveler_$", "Shipping_$", "LocalFees_%", "LocalFees"]
+settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "F8Mode", "IntFees_%", "Traveler_$", "Shipping_$", "LocalFees_%", "LocalFees"]
 for editbox in settingsnames {
     settingsgui.AddText("xs y" A_Index * 40 - 36, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
-    if instr(editbox, "Mode")
+    if instr(editbox, "F8Mode")
         settingsgui.Add("DropDownList", inputformat " r5", ["Ask", "Traveler", "Shipping", "Both", "None"]).Text := SettingsYml[editbox]
     else settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", inputformat, SettingsYml[editbox])
 }
@@ -133,8 +133,7 @@ chromeprice(*) {
             convMode := 1 / (usdrate / (custrate > 0 ? 1 : altfactor))
             upperendS := "", upperendT := ""
         default: tCurrency := baseCurrency
-            overheadmode := SettingsYml["Mode"]
-            overheadmode := overheadmode = "Ask" ? mySelectInput("DropDownList", ["Shipping", "Traveler", "Both", "None"], , "Select Conversion Mode, or keep empty to cancel") : overheadmode
+            overheadmode := SettingsYml["F8Mode"] = "Ask" ? mySelectInput("DropDownList", ["Shipping", "Traveler", "Both", "None"], , "Select Conversion Mode, or keep empty to cancel") : SettingsYml["F8Mode"]
             convMode := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
             upperendS := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping_$"])
             upperendT := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, SettingsYml["IntFees_%"], SettingsYml["Traveler_$"])
