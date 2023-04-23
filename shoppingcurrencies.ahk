@@ -12,14 +12,14 @@ convgui.AddText(, "From Currency")
 convgui.AddDropDownList("vfromCur ys x250 w120").OnEvent("Change", calculateresult)
 convgui.AddEdit("vfromVal xm w350").OnEvent("Change", calculateresult)
 convgui.AddText("xm voverheadtext section", "Overhead Mode")
-convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "Traveler","T+T"]).OnEvent("Change", calculateresult)
+convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "Traveler", "T+T"]).OnEvent("Change", calculateresult)
 convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
-(statusbar := convgui.AddStatusBar('vStatus')).SetParts(20,20)
+(statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 230)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
-statusbar.SetIcon("lib\youtube.png", ,2)
-statusbar.OnEvent("Click",statusfn)
+statusbar.SetIcon("lib\youtube.png", , 2)
+statusbar.OnEvent("Click", statusfn)
 
-statusfn(obj,info){
+statusfn(obj, info) {
     if info = 1
         (settingsgui.Show(), convgui.Hide())
     else if info = 2
@@ -35,7 +35,7 @@ InitiateYml() {
         Download "http://www.floatrates.com/daily/" baseCurrency ".json", "currency.yml"
     currencyjson := Yaml("currency.yml")
     usdrate := currencyjson[Strlower(intCurrency)]["inverseRate"]
-    if custrate := SettingsYml["Alt_$"] > 0 {
+    if (custrate := SettingsYml["Alt_$"]) > 0 {
         altfactor := custrate / usdrate
         usdrate := custrate
     } else {
@@ -48,7 +48,6 @@ InitiateYml() {
     try convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
     catch
         convgui["fromCur"].Choose(intCurrency)
-    statusbar.SetText(" 1 " intCurrency " = " round(usdrate, 2) " " baseCurrency, 3)
 }
 
 calculateresult(*) {
@@ -57,14 +56,15 @@ calculateresult(*) {
         convrate := 1 / usdrate
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0
-        statusbar.SetText("", 3)
+        statusbar.SetText("", 3),statusbar.SetText("", 4)
     } else {
         toCur := baseCurrency
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
-        statusbar.SetText(" 1 " convgui["fromCur"].Text " = " round(convrate, 2) " " baseCurrency, 3)
-}
+        statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " baseCurrency, 3)
+        custrate ? "" :statusbar.SetText(round(SettingsYml["BankMax"] / convrate), 4)
+    }
     if convgui["fromVal"].Text ~= "[a-zA-Z]"
         convgui["toVal"].Text := "Letters,commas and spaces not allowed"
     else if !convgui["fromVal"].Text
@@ -81,11 +81,12 @@ calculateresult(*) {
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
         if convgui["fromCur"].Text != baseCurrency and direct > SettingsYml["BankMax"] and !custrate
-            MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate",,48
+            MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
     }
 }
 
 InitiateYml()
+calculateresult()
 convgui.Show()
 
 settingsgui := Gui()
