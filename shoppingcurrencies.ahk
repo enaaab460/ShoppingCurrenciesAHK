@@ -142,7 +142,7 @@ chromeprice(*) {
     switch MatchC {
         case baseCurrency: tCurrency := intCurrency
             convMode := 1 / (usdrate / (custrate > 0 ? 1 : altfactor))
-            upperendS := "", upperendT := ""
+            upperend := ""
         default: tCurrency := baseCurrency
             overheadmode := SettingsYml["F8Mode"] = "Ask" ? mySelectInput("DropDownList", ["Convert", "Shipping", "Traveler", "TT"], , "Select Conversion Mode, or keep empty to cancel") : SettingsYml["F8Mode"]
             convMode := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
