@@ -174,7 +174,9 @@ f9:: {
     KeyWait "LButton", "D"
     ToolTip
     sleep 50
+    A_Clipboard:=""
     slowerevent("{AppsKey}{Sleep 1}{c 2}{Right}{c 2}{Enter}", 100)
+    ClipWait(1)
     regex := RegExMatchAll(A_Clipboard, "\S*[.#]\S+")
     try targetspan := regex[-1][]
     failedmsg "Failed to find cssselector", !IsSet(targetspan)
