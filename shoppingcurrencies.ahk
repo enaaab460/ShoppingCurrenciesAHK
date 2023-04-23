@@ -14,9 +14,17 @@ convgui.AddEdit("vfromVal xm w350").OnEvent("Change", calculateresult)
 convgui.AddText("xm voverheadtext section", "Overhead Mode")
 convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "Traveler"]).OnEvent("Change", calculateresult)
 convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
-(statusbar := convgui.AddStatusBar('vStatus')).SetParts(30)
+(statusbar := convgui.AddStatusBar('vStatus')).SetParts(20,20)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
-statusbar.OnEvent("Click", (obj, info) => (info = 1) ? (settingsgui.Show(), convgui.Hide()) : "")
+statusbar.SetIcon("lib\youtube.png", ,2)
+statusbar.OnEvent("Click",statusfn)
+
+statusfn(obj,info){
+    if info = 1
+        (settingsgui.Show(), convgui.Hide())
+    else if info = 2
+        run "www.youtube.com"
+}
 
 InitiateYml() {
     global
@@ -40,7 +48,7 @@ InitiateYml() {
     try convgui["fromCur"].Choose(lastcur != "" ? lastcur : intCurrency)
     catch
         convgui["fromCur"].Choose(intCurrency)
-    statusbar.SetText(" 1 " intCurrency " = " round(usdrate, 2) " " baseCurrency, 2)
+    statusbar.SetText(" 1 " intCurrency " = " round(usdrate, 2) " " baseCurrency, 3)
 }
 
 calculateresult(*) {
@@ -69,7 +77,7 @@ calculateresult(*) {
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
         if convgui["fromCur"].Text != baseCurrency and direct > SettingsYml["BankMax"] and !custrate
-            failedmsg "Price exceeds maximum exchange allowed by bank, change to altrate"
+            MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate",,48
     }
 }
 
