@@ -56,14 +56,14 @@ calculateresult(*) {
         convrate := 1 / usdrate
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0
-        statusbar.SetText("", 3),statusbar.SetText("", 4)
+        statusbar.SetText("", 3), statusbar.SetText("", 4)
     } else {
         toCur := baseCurrency
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
         statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " baseCurrency, 3)
-        custrate ? "" :statusbar.SetText(round(SettingsYml["BankMax"] / convrate), 4)
+        custrate ? "" : statusbar.SetText(round(SettingsYml["BankMax"] / convrate * altfactor), 4)
     }
     if convgui["fromVal"].Text ~= "[a-zA-Z]"
         convgui["toVal"].Text := "Letters,commas and spaces not allowed"
@@ -80,7 +80,7 @@ calculateresult(*) {
             overhead := round(direct * ((1 + SettingsYml["LocalFees_%"] / altfactor / 100) * ((SettingsYml["IntFees_%"]) / 100 + 1)) + SettingsYml["Traveler_$"] * usdrate) - direct + SettingsYml["LocalFees"]
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
-        if convgui["fromCur"].Text != baseCurrency and direct > SettingsYml["BankMax"] and !custrate
+        if convgui["fromCur"].Text != baseCurrency and direct > SettingsYml["BankMax"] * altfactor and !custrate
             MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
     }
 }
