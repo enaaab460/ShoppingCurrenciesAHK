@@ -173,7 +173,7 @@ f9:: {
         MsgBox(Format("{} is already a part of {}'s css selectors`nDo you want to replace the whole css?", targetspan, store), , 4) = "Yes" ? regionyml[cur][store] := targetspan : ""
     else regionyml[cur][store] := targetspan
     FileOverwrite(Yaml(regionyml, 3), "stores.yml")
-    ; WinActivate "ahk_exe chorme.exe"
-    ; send "{F12}{Sleep 200}"
-    ; chromeprice()
+    WinActivate "ahk_exe chorme.exe"
+    send "{F12}{Sleep 200}"
+    chromeprice()
 }
