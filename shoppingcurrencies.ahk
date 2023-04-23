@@ -33,7 +33,7 @@ InitiateYml() {
     if (custrate := SettingsYml["Alt_$"]) > 0 {
         altfactor := custrate / usdrate
         usdrate := custrate
-        statusbar.SetText("", 4)
+        statusbar.SetText("Alt Rate", 4)
     } else {
         altfactor := 1 + SettingsYml["BankRate_%"] / 100
         usdrate := usdrate * altfactor
@@ -62,7 +62,7 @@ calculateresult(*) {
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
         statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " baseCurrency, 3)
-        custrate ? "" : statusbar.SetText(round(bankmax / convrate * altfactor), 4)
+        statusbar.SetText(custrate ? "Alt Rate" : round(bankmax / convrate * altfactor), 4)
     }
     if convgui["fromVal"].Text ~= "[a-zA-Z]"
         convgui["toVal"].Text := "Letters,commas and spaces not allowed"
