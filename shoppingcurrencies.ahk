@@ -16,7 +16,7 @@ convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "
 convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(30)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
-statusbar.OnEvent("Click", (obj, info) => (info = 1) ? (settingsgui.Show(),convgui.Hide()) : "")
+statusbar.OnEvent("Click", (obj, info) => (info = 1) ? (settingsgui.Show(), convgui.Hide()) : "")
 
 InitiateYml() {
     global
@@ -167,7 +167,7 @@ f9:: {
     store := okinputbox("Confirm that the url is correct and specific to region", , , strreplace(urlregex["host"], "www."))
     regionyml := Yaml("stores.yml")[1]
     regionyml.has(cur) ? "" : regionyml[cur] := Map()
-    regionyml[cur].has(store) ? regionyml[cur][store] .= ", " targetspan : regionyml[cur][store] := targetspan
+    (!(regionyml[cur].has(store)) or (InStr(regionyml[cur][store], targetspan) and MsgBox(Format("{} is already a part of {}'s css selectors`nDo you want to replace the whole css?"), , 4) = "Yes")) ? regionyml[cur][store] := targetspan : regionyml[cur][store] .= ", " targetspan
     FileOverwrite(Yaml(regionyml, 3), "stores.yml")
     ; chromeprice()
 }
