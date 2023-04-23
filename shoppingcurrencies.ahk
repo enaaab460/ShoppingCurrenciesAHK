@@ -141,27 +141,24 @@ chromeprice(*) {
             convMode := 1 / (usdrate / (custrate > 0 ? 1 : altfactor))
             upperendS := "", upperendT := ""
         default: tCurrency := baseCurrency
-            overheadmode := SettingsYml["F8Mode"] = "Ask" ? mySelectInput("DropDownList", ["Shipping", "Traveler", "Both", "Convert"], , "Select Conversion Mode, or keep empty to cancel") : SettingsYml["F8Mode"]
+            overheadmode := SettingsYml["F8Mode"] = "Ask" ? mySelectInput("DropDownList", ["Convert", "Shipping", "Traveler", "TT"], , "Select Conversion Mode, or keep empty to cancel") : SettingsYml["F8Mode"]
             convMode := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
-            upperendT := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, SettingsYml["IntFees_%"], SettingsYml["Traveler_$"])
-            upperendS := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping_$"])
-            upperendTT := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Traveler_$"])
             switch overheadmode {
-                case "Shipping": upperendT := ""
-                case "Traveler": upperendS := ""
-                case "T+T": upperendS := ""
-                case "Convert": upperendS := "", upperendT := ""
+                case "Shipping": upperend := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping_$"])
+                case "Traveler": upperend := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, SettingsYml["IntFees_%"], SettingsYml["Traveler_$"])
+                case "T+T": upperend := Format('+ " - TT " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Traveler_$"])
+                case "Convert": upperend := ""
             }
     }
     jscmd := Format('
     ( LTrim Join`s
-        for (target of document.querySelectorAll("{1}")){
+        for (target of document.querySelectorAll("{}")){
             targetEGP = target.innerText.replace(",","").match(/\d+/);if (targetEGP) targetEGP = targetEGP[0]; else continue;
-            directconv = Math.round(targetEGP*{3});
-            target.textContent += "\n({2} " + directconv {4} {5} + ")";
-            if (directconv >= {6} && {7}) {window.alert("EGP " + directconv + " exceeds maximum exchange allowed by bank, change to altrate")}else{void(0);};
+            directconv = Math.round(targetEGP*{});
+            target.textContent += "\n({} " + directconv {} + ")";
+            if (directconv >= {} && {}) {window.alert("EGP " + directconv + " exceeds maximum exchange allowed by bank, change to altrate")}else{void(0);};
         }
-    )', MatchQ, tCurrency, convMode, upperendS, upperendT, bankmax, !(custrate or MatchC = baseCurrency) ? 1 : 0)
+    )', MatchQ, convMode, tCurrency, upperend, bankmax, !(custrate or MatchC = baseCurrency) ? 1 : 0)
     UIA_Chrome("A").JSExecute(jscmd)
     ; savemsg jscmd
 }
