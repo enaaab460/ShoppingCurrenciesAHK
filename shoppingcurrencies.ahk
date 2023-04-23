@@ -55,7 +55,7 @@ calculateresult(*) {
         convrate := 1 / usdrate
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0
-        statusbar.SetText(custrate >0 ? "Alt Rate" : bankmax, 4)
+        statusbar.SetText(custrate > 0 ? "Alt Rate" : bankmax, 4)
     } else {
         toCur := baseCurrency
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
@@ -90,7 +90,7 @@ convgui.Show()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
-settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "F8Mode", "IntFees_%", "Traveler_$", "Shipping_$", "LocalFees_%", "LocalFees"]
+settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "IntFees_%", "Traveler_$", "Shipping_$", "LocalFees_%", "LocalFees", "F8Mode"]
 for editbox in settingsnames {
     settingsgui.AddText("xs y" A_Index * 40 - 36, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
     ; editbox = "BankMax" ? settingsgui.AddPicture("x+20 w20 h20 icon95", A_WinDir "\System32\imageres.dll").OnEvent("Click", (*) => run(SettingsYml["BankInfo"])) : ""
