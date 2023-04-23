@@ -15,7 +15,7 @@ convgui.AddDropDownList("vfromCur ys x250 w120").OnEvent("Change", calculateresu
 convgui.AddEdit("vfromVal xm w350").OnEvent("Change", calculateresult)
 convgui.AddText("xm voverheadtext section", "Overhead Mode")
 convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["Convert", "Shipping", "Traveler", "T+T"]).OnEvent("Change", calculateresult)
-convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
+convgui.AddEdit("vtoVal ReadOnly r1 xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 240)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.SetIcon("lib\youtube.png", , 2)
@@ -55,15 +55,15 @@ calculateresult(*) {
         convrate := 1 / usdrate
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0
-        statusbar.SetText("", 3), statusbar.SetText("", 4)
+        statusbar.SetText(custrate >0 ? "Alt Rate" : bankmax, 4)
     } else {
         toCur := baseCurrency
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
-        statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " baseCurrency, 3)
         statusbar.SetText(custrate ? "Alt Rate" : round(bankmax / convrate * altfactor), 4)
     }
+    statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " toCur, 3)
     if convgui["fromVal"].Text ~= "[a-zA-Z]"
         convgui["toVal"].Text := "Letters,commas and spaces not allowed"
     else if !convgui["fromVal"].Text
@@ -79,7 +79,7 @@ calculateresult(*) {
             overhead := round(direct * ((1 + SettingsYml["LocalFees_%"] / altfactor / 100) * ((SettingsYml["IntFees_%"]) / 100 + 1)) + SettingsYml["Traveler_$"] * usdrate) - direct + SettingsYml["LocalFees"]
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
-        if convgui["fromCur"].Text != baseCurrency and direct > bankmax * altfactor and !custrate
+        if toCur = baseCurrency and direct > bankmax * altfactor and !custrate
             MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
     }
 }
@@ -174,7 +174,7 @@ f9:: {
     KeyWait "LButton", "D"
     ToolTip
     sleep 50
-    A_Clipboard:=""
+    A_Clipboard := ""
     slowerevent("{AppsKey}{Sleep 1}{c 2}{Right}{c 2}{Enter}", 100)
     ClipWait(1)
     regex := RegExMatchAll(A_Clipboard, "\S*[.#]\S+")
