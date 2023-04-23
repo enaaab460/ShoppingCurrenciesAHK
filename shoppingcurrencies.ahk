@@ -14,7 +14,7 @@ convgui.AddEdit("vfromVal xm w350").OnEvent("Change", calculateresult)
 convgui.AddText("xm voverheadtext section", "Overhead Mode")
 convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["Convert", "Shipping", "Traveler", "T+T"]).OnEvent("Change", calculateresult)
 convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
-(statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 230)
+(statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 240)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.SetIcon("lib\youtube.png", , 2)
 statusbar.OnEvent("Click", statusfn)
@@ -38,6 +38,7 @@ InitiateYml() {
     if (custrate := SettingsYml["Alt_$"]) > 0 {
         altfactor := custrate / usdrate
         usdrate := custrate
+        statusbar.SetText("", 4)
     } else {
         altfactor := 1 + SettingsYml["BankRate_%"] / 100
         usdrate := usdrate * altfactor
