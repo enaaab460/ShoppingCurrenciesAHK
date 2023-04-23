@@ -3,7 +3,7 @@ BankMax: 10000
 BankInfo: https://www.almasryalyoum.com/news/details/2791816
 BankRate_%: 10
 Base: EGP
-Conversion: "<a href=\"https://www.almasryalyoum.com/news/details/2791816\">LIMITS</a>"
+Conversion: "<a href=\"http://www.floatrates.com/json-feeds.html\">RATES</a>"
 Currencies: "<a href=\"https://www.iban.com/currency-codes\">IBAN</a>"
 "F8Mode": Ask
 INT: USD
