@@ -17,14 +17,7 @@ convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 240)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.SetIcon("lib\youtube.png", , 2)
-statusbar.OnEvent("Click", statusfn)
-
-statusfn(obj, info) {
-    if info = 1
-        (settingsgui.Show(), convgui.Hide())
-    else if info = 2
-        run "www.youtube.com"
-}
+statusbar.OnEvent("Click", (obj,info) => info = 1 ? (settingsgui.Show(), convgui.Hide()) : info = 2 ? run("www.youtube.com") : "")
 
 InitiateYml() {
     global
