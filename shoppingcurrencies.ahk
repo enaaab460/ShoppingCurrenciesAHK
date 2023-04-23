@@ -97,6 +97,7 @@ for editbox in settingsnames {
     else settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", inputformat, SettingsYml[editbox])
 }
 settingsgui.AddButton("xs+120", "Save").OnEvent("Click", Saveset)
+settingsgui.AddText("xm yp w100", "Updated on`n23/4/23").SetFont("S12")
 settingsgui.OnEvent("Close", (*) => convgui.Show())
 Saveset(*) {
     global SettingsYml
