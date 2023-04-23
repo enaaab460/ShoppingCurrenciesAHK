@@ -100,9 +100,12 @@ for editbox in settingsnames {
 }
 settingsgui.AddButton("xs+120", "Save").OnEvent("Click", Saveset)
 settingsgui.OnEvent("Close", (*) => convgui.Show())
-settingsstatus := settingsgui.AddStatusBar(, "Updated on: " updatedate)
-settingsstatus.OnEvent("Click", (*) => run("https://github.com/enaaab460/ShoppingCurrenciesAHK"))
+settingsstatus := settingsgui.AddStatusBar()
+settingsstatus.SetParts(20,20)
+settingsstatus.OnEvent("Click", (obj,info) =>info = 2 ? Run("notepad.exe stores.yml") : run("https://github.com/enaaab460/ShoppingCurrenciesAHK"))
 settingsstatus.SetIcon("lib\github.png", , 1)
+settingsstatus.SetIcon("lib\store.png", , 2)
+settingsstatus.SetText("Updated on: " updatedate,3)
 Saveset(*) {
     global SettingsYml
     for key, value in SettingsYml
