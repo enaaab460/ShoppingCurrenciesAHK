@@ -12,7 +12,7 @@ convgui.AddText(, "From Currency")
 convgui.AddDropDownList("vfromCur ys x250 w120").OnEvent("Change", calculateresult)
 convgui.AddEdit("vfromVal xm w350").OnEvent("Change", calculateresult)
 convgui.AddText("xm voverheadtext section", "Overhead Mode")
-convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "Traveler"]).OnEvent("Change", calculateresult)
+convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["None", "Shipping", "Traveler","T+T"]).OnEvent("Change", calculateresult)
 convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(20,20)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
@@ -57,12 +57,14 @@ calculateresult(*) {
         convrate := 1 / usdrate
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0
+        statusbar.SetText("", 3)
     } else {
         toCur := baseCurrency
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
-    }
+        statusbar.SetText(" 1 " convgui["fromCur"].Text " = " round(convrate, 2) " " baseCurrency, 3)
+}
     if convgui["fromVal"].Text ~= "[a-zA-Z]"
         convgui["toVal"].Text := "Letters,commas and spaces not allowed"
     else if !convgui["fromVal"].Text
@@ -74,6 +76,8 @@ calculateresult(*) {
             overhead := round(SettingsYml["Traveler_$"] * usdrate) + (direct * (SettingsYml["IntFees_%"] / 100)) + SettingsYml["LocalFees"]
         else if convgui["Overhead"].Text = "Shipping"
             overhead := round(direct * ((1 + SettingsYml["LocalFees_%"] / altfactor / 100) * ((SettingsYml["IntFees_%"]) / 100 + 1)) + SettingsYml["Shipping_$"] * usdrate) - direct + SettingsYml["LocalFees"]
+        else if convgui["Overhead"].Text = "T+T"
+            overhead := round(direct * ((1 + SettingsYml["LocalFees_%"] / altfactor / 100) * ((SettingsYml["IntFees_%"]) / 100 + 1)) + SettingsYml["Traveler_$"] * usdrate) - direct + SettingsYml["LocalFees"]
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
         if convgui["fromCur"].Text != baseCurrency and direct > SettingsYml["BankMax"] and !custrate
@@ -135,8 +139,9 @@ chromeprice(*) {
         default: tCurrency := baseCurrency
             overheadmode := SettingsYml["F8Mode"] = "Ask" ? mySelectInput("DropDownList", ["Shipping", "Traveler", "Both", "None"], , "Select Conversion Mode, or keep empty to cancel") : SettingsYml["F8Mode"]
             convMode := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
-            upperendS := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping_$"])
             upperendT := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, SettingsYml["IntFees_%"], SettingsYml["Traveler_$"])
+            upperendS := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping_$"])
+            upperendTT := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Traveler_$"])
             switch overheadmode {
                 case "Shipping": upperendT := ""
                 case "Traveler": upperendS := ""

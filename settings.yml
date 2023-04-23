@@ -4,11 +4,11 @@ BankRate_%: 10
 Base: EGP
 Conversion: "<a href=\"http://www.floatrates.com/json-feeds.html\">RATES</a>"
 Currencies: "<a href=\"https://www.iban.com/currency-codes\">IBAN</a>"
+"F8Mode": Ask
 INT: USD
-"IntFees_%": 10
+"IntFees_%": 0
 "LocalFees": 0
 "LocalFees_%": 14
-F8Mode: Ask
 Overhead: "<a href=\"https://www.ugotbox.com/help/\">UGOTBOX</a>"
 Regions: EGP,USD,SAR,AED,EUR,INR,CNY,JPY
 Shipping_$: 50
