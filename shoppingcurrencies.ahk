@@ -17,7 +17,7 @@ convgui.AddEdit("vtoVal ReadOnly r2 xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 240)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.SetIcon("lib\youtube.png", , 2)
-statusbar.OnEvent("Click", (obj,info) => info = 1 ? (settingsgui.Show(), convgui.Hide()) : info = 2 ? run("www.youtube.com") : "")
+statusbar.OnEvent("Click", (obj, info) => info = 1 ? (settingsgui.Show(), convgui.Hide()) : info = 2 ? run("www.youtube.com") : "")
 
 InitiateYml() {
     global
@@ -91,6 +91,7 @@ settingsgui.SetFont("S18")
 settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "F8Mode", "IntFees_%", "Traveler_$", "Shipping_$", "LocalFees_%", "LocalFees"]
 for editbox in settingsnames {
     settingsgui.AddText("xs y" A_Index * 40 - 36, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
+    ; editbox = "BankMax" ? settingsgui.AddPicture("x+20 w20 h20 icon95", A_WinDir "\System32\imageres.dll").OnEvent("Click", (*) => run(SettingsYml["BankInfo"])) : ""
     if instr(editbox, "F8Mode")
         settingsgui.Add("DropDownList", inputformat " r5", ["Ask", "Convert", "Shipping", "Traveler", "T+T"]).Text := SettingsYml[editbox]
     else settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", inputformat, SettingsYml[editbox])
