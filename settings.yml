@@ -8,7 +8,7 @@ INT: USD
 "IntFees_%": 10
 "LocalFees": 0
 "LocalFees_%": 14
-Mode: Ask
+F8Mode: Ask
 Overhead: "<a href=\"https://www.ugotbox.com/help/\">UGOTBOX</a>"
 Regions: EGP,USD,SAR,AED,EUR,INR,CNY,JPY
 Shipping_$: 50
