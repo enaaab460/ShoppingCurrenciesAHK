@@ -1,4 +1,4 @@
-AED:
+﻿AED:
   amazon.ae: "span.a-price > span:nth-last-child(1)"
   noon.com/uae: ".sc-6073040e-1.jscnIS,.priceNow"
 EGP:

@@ -63,9 +63,9 @@ calculateresult(*) {
         out := regexreplace(convgui["fromVal"].Text, "\.\d*|,")
         direct := round(out * convrate, 2)
         if convgui["Overhead"].Text = "Traveler"
-            overhead := round(SettingsYml["Traveler_$"] * usdrate) + (direct * (SettingsYml["IntFees_%"] / 100))
+            overhead := round(SettingsYml["Traveler_$"] * usdrate) + (direct * (SettingsYml["IntFees_%"] / 100)) + SettingsYml["LocalFees"]
         else if convgui["Overhead"].Text = "Shipping"
-            overhead := round(direct * ((1 + SettingsYml["LocalFees_%"] / altfactor / 100) * ((SettingsYml["IntFees_%"]) / 100 + 1)) + SettingsYml["Shipping_$"] * usdrate) - direct
+            overhead := round(direct * ((1 + SettingsYml["LocalFees_%"] / altfactor / 100) * ((SettingsYml["IntFees_%"]) / 100 + 1)) + SettingsYml["Shipping_$"] * usdrate) - direct + SettingsYml["LocalFees"]
         else outformat := "{} {}", overhead := 0
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(direct + overhead)))
         if convgui["fromCur"].Text != baseCurrency and direct > SettingsYml["BankMax"] and !custrate
@@ -78,13 +78,15 @@ convgui.Show()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
-settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "Mode", "IntFees_%", "Traveler_$", "LocalFees_%", "Shipping_$"]
+settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "Mode", "IntFees_%", "Traveler_$", "Shipping_$", "LocalFees_%", "LocalFees"]
 for editbox in settingsnames {
-    settingsgui.AddText("xs y" A_Index * 40 - 36, editbox)
-    ; settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 y{} h36 w150 v{}", A_Index * 40 - 36, editbox), SettingsYml[editbox])
-    settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", Format("x200 yp h36 w150 v{}", editbox), SettingsYml[editbox])
+    settingsgui.AddText("xs y" A_Index * 40 - 36, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
+    if instr(editbox, "Mode")
+        settingsgui.Add("DropDownList", inputformat " r5", ["Ask", "Traveler", "Shipping", "Both", "None"]).Text := SettingsYml[editbox]
+    else settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", inputformat, SettingsYml[editbox])
 }
 settingsgui.AddButton("xs+120", "Save").OnEvent("Click", Saveset)
+settingsgui.OnEvent("Close", (*) => convgui.Show())
 Saveset(*) {
     global SettingsYml
     for key, value in SettingsYml
@@ -167,7 +169,11 @@ f9:: {
     store := okinputbox("Confirm that the url is correct and specific to region", , , strreplace(urlregex["host"], "www."))
     regionyml := Yaml("stores.yml")[1]
     regionyml.has(cur) ? "" : regionyml[cur] := Map()
-    (!(regionyml[cur].has(store)) or (InStr(regionyml[cur][store], targetspan) and MsgBox(Format("{} is already a part of {}'s css selectors`nDo you want to replace the whole css?"), , 4) = "Yes")) ? regionyml[cur][store] := targetspan : regionyml[cur][store] .= ", " targetspan
+    if regionyml[cur].has(store) and InStr(regionyml[cur][store], targetspan)
+        MsgBox(Format("{} is already a part of {}'s css selectors`nDo you want to replace the whole css?", targetspan, store), , 4) = "Yes" ? regionyml[cur][store] := targetspan : ""
+    else regionyml[cur][store] := targetspan
     FileOverwrite(Yaml(regionyml, 3), "stores.yml")
+    ; WinActivate "ahk_exe chorme.exe"
+    ; send "{F12}{Sleep 200}"
     ; chromeprice()
 }
