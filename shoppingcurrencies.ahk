@@ -52,7 +52,7 @@ InitiateYml() {
 calculateresult(*) {
     if convgui["fromCur"].Text = baseCurrency {
         toCur := intCurrency
-        convrate := 1 / usdrate
+        convrate := 1 / (usdrate / (custrate > 0 ? 1 : altfactor))
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0
         statusbar.SetText(custrate > 0 ? "Alt Rate" : bankmax, 4)
