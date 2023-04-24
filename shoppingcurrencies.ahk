@@ -26,9 +26,9 @@ InitiateYml() {
     SettingsYml := Yaml("settings.yml")[1]
     baseCurrency := SettingsYml["Base"]
     intCurrency := SettingsYml["INT"]
-    if (!FileExist("currency.yml") or !instr(FileGetTime("currency.yml", "M"), A_Year A_mon A_DD))
-        Download "http://www.floatrates.com/daily/" baseCurrency ".json", "currency.yml"
-    currencyjson := Yaml("currency.yml")
+    if (!FileExist("currency.json") or !instr(FileGetTime("currency.json", "M"), A_Year A_mon A_DD))
+        Download "http://www.floatrates.com/daily/" baseCurrency ".json", "currency.json"
+    currencyjson := Yaml("currency.json")
     usdrate := currencyjson[Strlower(intCurrency)]["inverseRate"]
     if (custrate := SettingsYml["Alt_$"]) > 0 {
         altfactor := custrate / usdrate
