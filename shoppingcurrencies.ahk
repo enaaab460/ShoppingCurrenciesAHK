@@ -127,7 +127,7 @@ f7:: {
 f8::
 chromeprice(*) {
     WinActivate "ahk_exe chrome.exe"
-    currentlink := UIA_Chrome("A").GetCurrentURL()
+    currentlink := UIA_Chrome("ahk_exe chrome.exe").GetCurrentURL()
     for currency, stores in Yaml("stores.yml")[1]
         if stores
             for store, query in stores {
@@ -168,7 +168,7 @@ chromeprice(*) {
 
 f9:: {
     WinActivate "ahk_exe chrome.exe"
-    chrome := UIA_Chrome("A")
+    chrome := UIA_Chrome("ahk_exe chrome.exe")
     RegExMatch(chrome.GetCurrentURL(), "U)https?:\/\/(?:www\.)?(?<host>[\w.]+)\/", &urlregex)
     send "^C"
     sleep 200
