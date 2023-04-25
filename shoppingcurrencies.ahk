@@ -171,7 +171,7 @@ f9:: {
     chrome := UIA_Chrome("ahk_exe chrome.exe")
     RegExMatch(chrome.GetCurrentURL(), "U)https?:\/\/(?:www\.)?(?<host>[\w.]+)\/", &urlregex)
     send "^C"
-    sleep 200
+    sleep 400
     chrome.WaitElement({ Name: "Toggle device toolbar", T: "Button" })
     ToolTip "Choose Price"
     KeyWait "LButton", "D"
