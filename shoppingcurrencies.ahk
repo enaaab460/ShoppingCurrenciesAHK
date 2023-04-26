@@ -48,7 +48,7 @@ calculateresult(*) {
         toCur := intCurrency
         convrate := 1 / bankusd
         outformat := "{} {}"
-        convgui["Overhead"].Enabled := 0
+        convgui["Overhead"].Enabled := 0, convgui["Overhead"].Text := "Convert"
         statusbar.SetText(altusd ? "Alt Rate" : "", 4)
     } else {
         toCur := baseCurrency
@@ -72,12 +72,11 @@ calculateresult(*) {
         bankcomm := convtoutaIntFees * (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100)
         switch convgui["Overhead"].Text {
             case "Traveler", "T+T": transportcomm := instr(SettingsYml["Traveler_$"], "a") ? StrReplace(SettingsYml["Traveler_$"], "a") * altusd : SettingsYml["Traveler_$"] * bankusd
-            case "Shipping": transportcomm := SettingsYml["Shipping"] * convrate
+            case "Shipping": transportcomm := SettingsYml["Shipping"] * (InStr(SettingsYml["Shipping"], "$") ? strreplace(bankusd, "$") : convrate)
                 bankcomm += transportcomm * SettingsYml["BankRate_%"] / 100
         }
         localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * bankusd * SettingsYml["LocalFees_%"] / 100
-        overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"]
-        total := convtoutaIntFees + overhead
+        total := convtoutaIntFees + (overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"])
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
         if toCur = baseCurrency and convtoutaIntFees > bankmax and !altusd
             MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
