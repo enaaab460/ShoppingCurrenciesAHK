@@ -64,20 +64,18 @@ calculateresult(*) {
         convgui["toVal"].Text := ""
     else {
         out := regexreplace(convgui["fromVal"].Text, "\.\d*|,")
-        convtout := out * convrate
+        ; convtout := out * convrate
         intFees := SettingsYml["IntFees_%"] >= 0 ? out * SettingsYml["IntFees_%"] / 100 : out * -(SettingsYml["IntFees_%"] / (100 + SettingsYml["IntFees_%"]))
         outaIntFees := out + intFees
         convtoutaIntFees := outaIntFees * convrate
-        overhead := 0, localfees := 0, transportcomm := 0
         bankcomm := convtoutaIntFees * (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100)
         switch convgui["Overhead"].Text {
             case "Traveler", "T+T": transportcomm := instr(SettingsYml["Traveler_$"], "a") ? StrReplace(SettingsYml["Traveler_$"], "a") * altusd : SettingsYml["Traveler_$"] * bankusd
             case "Shipping": transportcomm := SettingsYml["Shipping_$"] * bankusd
                 bankcomm += transportcomm * SettingsYml["BankRate_%"] / 100
         }
-        if convgui["Overhead"].Text != "Traveler"
-            localfees := outaIntFees * bankusd * SettingsYml["LocalFees_%"] / 100
-        overhead := bankcomm + transportcomm + localfees + SettingsYml["LocalFees"]
+        localfees := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * bankusd * SettingsYml["LocalFees_%"] / 100
+        overhead := bankcomm + (transportcomm ?? 0) + localfees + SettingsYml["LocalFees"]
         total := convtoutaIntFees + overhead
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
         if toCur = baseCurrency and convtoutaIntFees > bankmax and !altusd
