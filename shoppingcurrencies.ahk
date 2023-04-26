@@ -46,7 +46,7 @@ InitiateYml() {
 calculateresult(*) {
     if convgui["fromCur"].Text = baseCurrency {
         toCur := intCurrency
-        convrate := 1 / bankusd
+        convrate := 1 / (altusd > 0 ? altusd : bankusd)
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0, convgui["Overhead"].Text := "Convert"
         statusbar.SetText(altusd ? "Alt Rate" : "", 4)
@@ -65,21 +65,23 @@ calculateresult(*) {
         convgui["toVal"].Text := ""
     else {
         out := regexreplace(convgui["fromVal"].Text, "\.\d*|,")
-        ; convtout := out * convrate
-        intFees := SettingsYml["IntFees_%"] >= 0 ? out * SettingsYml["IntFees_%"] / 100 : out * -(SettingsYml["IntFees_%"] / (100 + SettingsYml["IntFees_%"]))
-        outaIntFees := out + intFees
-        convtoutaIntFees := outaIntFees * convrate
-        bankcomm := convtoutaIntFees * (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100)
-        switch convgui["Overhead"].Text {
-            case "Traveler", "T+T": transportcomm := instr(SettingsYml["Traveler_$"], "a") ? StrReplace(SettingsYml["Traveler_$"], "a") * altusd : SettingsYml["Traveler_$"] * bankusd
-            case "Shipping": transportcomm := SettingsYml["Shipping"] * (InStr(SettingsYml["Shipping"], "$") ? strreplace(bankusd, "$") : convrate)
-                bankcomm += transportcomm * SettingsYml["BankRate_%"] / 100
-        }
-        localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * bankusd * SettingsYml["LocalFees_%"] / 100
-        total := convtoutaIntFees + (overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"])
-        convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
-        if toCur = baseCurrency and convtoutaIntFees > bankmax and !altusd
-            MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
+        if toCur = baseCurrency {
+            intFees := SettingsYml["IntFees_%"] >= 0 ? out * SettingsYml["IntFees_%"] / 100 : out * -(SettingsYml["IntFees_%"] / (100 + SettingsYml["IntFees_%"]))
+            outaIntFees := out + intFees
+            convtoutaIntFees := outaIntFees * convrate
+            bankcomm := convtoutaIntFees * (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100)
+            switch convgui["Overhead"].Text {
+                case "Traveler", "T+T": transportcomm := instr(SettingsYml["Traveler_$"], "a") ? StrReplace(SettingsYml["Traveler_$"], "a") * altusd : SettingsYml["Traveler_$"] * bankusd
+                case "Shipping": transportcomm := SettingsYml["Shipping"] * (InStr(SettingsYml["Shipping"], "$") ? strreplace(bankusd, "$") : convrate)
+                    bankcomm += transportcomm * SettingsYml["BankRate_%"] / 100
+            }
+            localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * convrate * SettingsYml["LocalFees_%"] / 100
+            total := convtoutaIntFees + (overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"])
+            convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
+            if convtoutaIntFees > bankmax and !altusd
+                MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
+        } else
+            convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(out * convrate)))
     }
 }
 
@@ -91,20 +93,18 @@ settingsgui := Gui()
 settingsgui.SetFont("S18")
 settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "IntFees_%", "Traveler_$", "Shipping", "LocalFees_%", "LocalFees", "F8Mode"]
 for editbox in settingsnames {
-    settingsgui.AddText("xs y" A_Index * 40 - 36, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
+    settingsgui.AddText("xs y" (A_Index - 1) * 38, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
     ; editbox = "BankMax" ? settingsgui.AddPicture("x+20 w20 h20 icon95", A_WinDir "\System32\imageres.dll").OnEvent("Click", (*) => run(SettingsYml["BankInfo"])) : ""
     if instr(editbox, "F8Mode")
         settingsgui.Add("DropDownList", inputformat " r5", ["Ask", "Convert", "Shipping", "Traveler", "T+T"]).Text := SettingsYml[editbox]
     else settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", inputformat, SettingsYml[editbox])
 }
-settingsgui.AddButton("xs+120", "Save").OnEvent("Click", Saveset)
+settingsgui.AddButton("y+10 xm+120", "Save").OnEvent("Click", Saveset)
 settingsgui.OnEvent("Close", (*) => convgui.Show())
 settingsstatus := settingsgui.AddStatusBar()
 settingsstatus.SetParts(20, 20)
 settingsstatus.OnEvent("Click", (obj, info) => info = 2 ? Run("notepad.exe stores.yml") : run("https://github.com/enaaab460/ShoppingCurrenciesAHK"))
-settingsstatus.SetIcon("lib\github.png", , 1)
-settingsstatus.SetIcon("lib\store.png", , 2)
-settingsstatus.SetText("Updated on: " updatedate, 3)
+settingsstatus.SetIcon("lib\github.png", , 1), settingsstatus.SetIcon("lib\store.png", , 2), settingsstatus.SetText("Updated on: " updatedate, 3)
 Saveset(*) {
     global SettingsYml
     for key, value in SettingsYml
@@ -122,7 +122,7 @@ f7:: {
     convgui.Show()
     KeyWait(ThisHotkey, "t0.3")
 }
-/*
+
 f8::
 chromeprice(*) {
     WinActivate "ahk_exe chrome.exe"
@@ -139,30 +139,40 @@ chromeprice(*) {
             }
     isset(MatchC) ? "" : failedmsg("Store not supported")
     switch MatchC {
-        case baseCurrency: tCurrency := intCurrency
-            convMode := 1 / (usdrate / (altusd > 0 ? 1 : altfactor))
-            upperend := ""
-        default: tCurrency := baseCurrency
+        case baseCurrency: toCur := intCurrency
+            convrate := 1 / (altusd > 0 ? altusd : bankusd)
+            overheadmode := "Convert"
+            minijs := Format('target.textContent += "\n({} " + Math.round(productPrice * {}) + ")";', toCur, convrate)
+        default: toCur := baseCurrency
+            convrate := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
             overheadmode := SettingsYml["F8Mode"] = "Ask" ? mySelectInput("DropDownList", ["Convert", "Shipping", "Traveler", "TT"], , "Select Conversion Mode, or keep empty to cancel") : SettingsYml["F8Mode"]
-            convMode := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
             switch overheadmode {
-                case "Convert": upperend := ""
-                case "Shipping": upperend := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping"])
-                case "Traveler": upperend := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, SettingsYml["IntFees_%"], SettingsYml["Traveler_$"])
-                case "T+T": upperend := Format('+ " - TT " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Traveler_$"])
+                case "Convert": mmath := ""
+                case "Traveler", "TT": mmath := Format('transportcomm = {};', transportcomm := instr(SettingsYml["Traveler_$"], "a") ? StrReplace(SettingsYml["Traveler_$"], "a") * altusd : SettingsYml["Traveler_$"] * bankusd)
+                case "Shipping": mmath := Format('transportcomm = {};`nbankcomm += {};', transportcomm := SettingsYml["Shipping"] * (InStr(SettingsYml["Shipping"], "$") ? strreplace(bankusd, "$") : convrate), transportcomm * SettingsYml["BankRate_%"] / 100)
             }
+            minijs := Format('
+            (
+                intFees = productPrice * {};
+                outaIntFees = intFees + productPrice;
+                convtoutaIntFees = outaIntFees * {};
+                bankcomm = convtoutaIntFees * {};
+                {}
+                localfeecent = {};
+                total = convtoutaIntFees + bankcomm + {} + localfeecent;
+                target.textContent += "\n({} " + Math.round(convtoutaIntFees) + "-" + "{}" + Math.round(total) + ")";
+                if (convtoutaIntFees >= {} && {}) {window.alert("EGP " + Math.round(convtoutaIntFees) + " exceeds maximum exchange allowed by bank, change to altrate")}else{void(0);};
+            )', SettingsYml["IntFees_%"] >= 0 ? SettingsYml["IntFees_%"] / 100 : -(SettingsYml["IntFees_%"] / (100 + SettingsYml["IntFees_%"])), convrate, (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100), mmath, overheadmode = "Traveler" ? 0 : "outaIntFees *" convrate * SettingsYml["LocalFees_%"] / 100, (transportcomm ?? 0) + SettingsYml["LocalFees"], toCur, SubStr(overheadmode, 1, 2), bankmax, !(altusd) ? 1 : 0)
     }
     jscmd := Format('
-    ( LTrim Join`s
+    ( ;LTrim Join`s
         for (target of document.querySelectorAll("{}")){
-            targetEGP = target.innerText.replace(",","").match(/\d+/);if (targetEGP) targetEGP = targetEGP[0]; else continue;
-            directconv = Math.round(targetEGP*{});
-            target.textContent += "\n({} " + directconv {} + ")";
-            if (directconv >= {} && {}) {window.alert("EGP " + directconv + " exceeds maximum exchange allowed by bank, change to altrate")}else{void(0);};
+            productPrice = target.innerText.replace(",","").match(/\d+/);if (productPrice) productPrice = Number(productPrice[0]); else continue;
+            {}
         }
-    )', MatchQ, convMode, tCurrency, upperend, bankmax, !(altusd or MatchC = baseCurrency) ? 1 : 0)
+    )', MatchQ, minijs)
     UIA_Chrome("A").JSExecute(jscmd)
-    ; savemsg jscmd
+    savemsg jscmd
 }
 
 f9:: {
@@ -193,4 +203,4 @@ f9:: {
     WinActivate "ahk_exe chrome.exe"
     send "{F12}{Sleep 200}"
     chromeprice()
-} */
+}
