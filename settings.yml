@@ -11,5 +11,5 @@ INT: USD
 "LocalFees_%": 14
 Overhead: "<a href=\"https://www.ugotbox.com/help/\">UGOTBOX</a>"
 Regions: EGP,USD,SAR,AED,EUR,CNY,JPY,INR
-Shipping_$: 50
+Shipping: 50
 Traveler_$: 100

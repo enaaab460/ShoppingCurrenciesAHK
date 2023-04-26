@@ -49,13 +49,14 @@ calculateresult(*) {
         convrate := 1 / bankusd
         outformat := "{} {}"
         convgui["Overhead"].Enabled := 0
-        ; statusbar.SetText(altusd > 0 ? "Alt Rate" : bankmax, 4)
+        statusbar.SetText(altusd ? "Alt Rate" : "", 4)
     } else {
         toCur := baseCurrency
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
-        ; statusbar.SetText(altusd ? "Alt Rate" : round(bankmax / convrate * altfactor), 4)
+        maxout := (bankmax / convrate) * ((100 + SettingsYml["IntFees_%"]) / 100) ** (SettingsYml["IntFees_%"] > 0 ? -1 : 1)
+        statusbar.SetText(altusd ? "Alt Rate" : round(maxout), 4)
     }
     statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " toCur, 3)
     if convgui["fromVal"].Text ~= "[^\d.,]"
@@ -71,11 +72,11 @@ calculateresult(*) {
         bankcomm := convtoutaIntFees * (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100)
         switch convgui["Overhead"].Text {
             case "Traveler", "T+T": transportcomm := instr(SettingsYml["Traveler_$"], "a") ? StrReplace(SettingsYml["Traveler_$"], "a") * altusd : SettingsYml["Traveler_$"] * bankusd
-            case "Shipping": transportcomm := SettingsYml["Shipping_$"] * bankusd
+            case "Shipping": transportcomm := SettingsYml["Shipping"] * convrate
                 bankcomm += transportcomm * SettingsYml["BankRate_%"] / 100
         }
-        localfees := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * bankusd * SettingsYml["LocalFees_%"] / 100
-        overhead := bankcomm + (transportcomm ?? 0) + localfees + SettingsYml["LocalFees"]
+        localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * bankusd * SettingsYml["LocalFees_%"] / 100
+        overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"]
         total := convtoutaIntFees + overhead
         convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
         if toCur = baseCurrency and convtoutaIntFees > bankmax and !altusd
@@ -89,7 +90,7 @@ convgui.Show()
 
 settingsgui := Gui()
 settingsgui.SetFont("S18")
-settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "IntFees_%", "Traveler_$", "Shipping_$", "LocalFees_%", "LocalFees", "F8Mode"]
+settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRate_%", "BankMax", "Alt_$", "Overhead", "IntFees_%", "Traveler_$", "Shipping", "LocalFees_%", "LocalFees", "F8Mode"]
 for editbox in settingsnames {
     settingsgui.AddText("xs y" A_Index * 40 - 36, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
     ; editbox = "BankMax" ? settingsgui.AddPicture("x+20 w20 h20 icon95", A_WinDir "\System32\imageres.dll").OnEvent("Click", (*) => run(SettingsYml["BankInfo"])) : ""
@@ -147,7 +148,7 @@ chromeprice(*) {
             convMode := currencyjson[StrLower(MatchC)]["inverseRate"] * altfactor
             switch overheadmode {
                 case "Convert": upperend := ""
-                case "Shipping": upperend := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping_$"])
+                case "Shipping": upperend := Format('+ " - S " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Shipping"])
                 case "Traveler": upperend := Format('+ " - T " + Math.round(targetEGP* {1} *1.{2} + {3} * {1})', convMode, SettingsYml["IntFees_%"], SettingsYml["Traveler_$"])
                 case "T+T": upperend := Format('+ " - TT " + Math.round(targetEGP* {1} *{2} + {3} * {1})', convMode, (1 + SettingsYml["LocalFees_%"] / altfactor / 100) * (SettingsYml["IntFees_%"] / 100 + 1), SettingsYml["Traveler_$"])
             }
