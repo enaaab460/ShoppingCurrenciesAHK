@@ -2,7 +2,7 @@ SetWorkingDir A_WorkingDir
 #Include "Lib\select toolbox.ahk"
 DetectHiddenWindows 0
 
-updatedate := '24/4/23'
+updatedate := '26/4/23'
 
 A_TrayMenu.add("Converter", (*) => convgui.show())
 A_TrayMenu.default := "Converter"
