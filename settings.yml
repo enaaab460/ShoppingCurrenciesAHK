@@ -6,7 +6,7 @@ Conversion: "<a href=\"http://www.floatrates.com/json-feeds.html\">RATES</a>"
 Currencies: "<a href=\"https://www.iban.com/currency-codes\">IBAN</a>"
 "F8Mode": Ask
 INT: USD
-"IntFees_%": 0
+"IntFees_%": 10
 "LocalFees": 0
 "LocalFees_%": 14
 Overhead: "<a href=\"https://www.ugotbox.com/help/\">UGOTBOX</a>"
