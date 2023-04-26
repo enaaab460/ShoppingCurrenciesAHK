@@ -55,8 +55,8 @@ calculateresult(*) {
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
-        maxout := (bankmax / convrate) * ((100 + SettingsYml["IntFees_%"]) / 100) ** (SettingsYml["IntFees_%"] > 0 ? -1 : 1)
-        statusbar.SetText(altusd ? "Alt Rate" : round(maxout), 4)
+        maxout := ((bankmax / convrate)- (SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? SettingsYml["Shipping"] : 0)) * ((100 + SettingsYml["IntFees_%"]) / 100) ** (SettingsYml["IntFees_%"] > 0 ? -1 : 1)
+        statusbar.SetText(altusd ? "Alt Rate" : floor(maxout), 4)
     }
     statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " toCur, 3)
     if convgui["fromVal"].Text ~= "[^\d.,]"
@@ -77,6 +77,7 @@ calculateresult(*) {
             }
             localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * convrate * SettingsYml["LocalFees_%"] / 100
             total := convtoutaIntFees + (overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"])
+            SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? (convtoutaIntFees += transportcomm ?? 0, overhead -= transportcomm ?? 0) : ""
             convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
             if convtoutaIntFees > bankmax and !altusd
                 MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
@@ -95,6 +96,7 @@ settingsnames := ["Currencies", "Base", "INT", "Regions", "Conversion", "BankRat
 for editbox in settingsnames {
     settingsgui.AddText("xs y" (A_Index - 1) * 38, editbox), inputformat := Format("x200 yp h36 w150 v{}", editbox)
     ; editbox = "BankMax" ? settingsgui.AddPicture("x+20 w20 h20 icon95", A_WinDir "\System32\imageres.dll").OnEvent("Click", (*) => run(SettingsYml["BankInfo"])) : ""
+    editbox = "Shipping" ? settingsgui.AddCheckbox("vShipNow y" (A_Index - 1) * 38 " x+5 " (SettingsYml["ShipNow"] ? "Checked" : ""), "Now") : ""
     if instr(editbox, "F8Mode")
         settingsgui.Add("DropDownList", inputformat " r5", ["Ask", "Convert", "Shipping", "Traveler", "T+T"]).Text := SettingsYml[editbox]
     else settingsgui.Add(InStr("Currencies,Conversion,Overhead", Editbox) ? "Link" : "Edit", inputformat, SettingsYml[editbox])
@@ -109,6 +111,7 @@ Saveset(*) {
     global SettingsYml
     for key, value in SettingsYml
         SettingsYml[key] := settingsgui[key].Text ? settingsgui[key].Text : 0
+    SettingsYml["ShipNow"] := settingsgui["ShipNow"].Value
     FileOverwrite(Yaml(SettingsYml, 2), "settings.yml")
     InitiateYml()
     calculateresult()
@@ -162,7 +165,7 @@ chromeprice(*) {
                 total = convtoutaIntFees + bankcomm + {} + localfeecent;
                 target.textContent += "\n({} " + Math.round(convtoutaIntFees) + "-" + "{}" + Math.round(total) + ")";
                 if (convtoutaIntFees >= {} && {}) {window.alert("EGP " + Math.round(convtoutaIntFees) + " exceeds maximum exchange allowed by bank, change to altrate")}else{void(0);};
-            )', SettingsYml["IntFees_%"] >= 0 ? SettingsYml["IntFees_%"] / 100 : -(SettingsYml["IntFees_%"] / (100 + SettingsYml["IntFees_%"])), convrate, (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100), mmath, overheadmode = "Traveler" ? 0 : "outaIntFees *" convrate * SettingsYml["LocalFees_%"] / 100, (transportcomm ?? 0) + SettingsYml["LocalFees"], toCur, SubStr(overheadmode, 1, 2), bankmax, !(altusd) ? 1 : 0)
+            )', SettingsYml["IntFees_%"] >= 0 ? SettingsYml["IntFees_%"] / 100 : -(SettingsYml["IntFees_%"] / (100 + SettingsYml["IntFees_%"])), convrate, (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100), mmath, overheadmode = "Traveler" ? 0 : "outaIntFees *" convrate * SettingsYml["LocalFees_%"] / 100, (transportcomm ?? 0) + SettingsYml["LocalFees"], toCur, SubStr(overheadmode, 1, 2), bankmax - (SettingsYml["ShipNow"] and convgui = "Shipping" ? transportcomm : 0), !(altusd) ? 1 : 0)
     }
     jscmd := Format('
     ( ;LTrim Join`s
@@ -172,7 +175,7 @@ chromeprice(*) {
         }
     )', MatchQ, minijs)
     UIA_Chrome("A").JSExecute(jscmd)
-    savemsg jscmd
+    ; savemsg jscmd
 }
 
 f9:: {
