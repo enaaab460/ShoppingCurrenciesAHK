@@ -15,7 +15,8 @@ convgui.AddDropDownList("vfromCur ys x250 w120").OnEvent("Change", calculateresu
 convgui.AddEdit("vfromVal xm w350").OnEvent("Change", calculateresult)
 convgui.AddText("xm voverheadtext section", "Overhead Mode")
 convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["Convert", "Shipping", "Traveler", "T+T"]).OnEvent("Change", calculateresult)
-convgui.AddEdit("vtoVal ReadOnly r1 xm w350")
+; convgui.AddEdit("vtoVal ReadOnly r1 xm w350")
+convgui.AddComboBox("vtoVal xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 240)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
 statusbar.SetIcon("lib\youtube.png", , 2)
@@ -55,14 +56,16 @@ calculateresult(*) {
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
-        maxout := ((bankmax / convrate)- (SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? SettingsYml["Shipping"] : 0)) * ((100 + SettingsYml["IntFees_%"]) / 100) ** (SettingsYml["IntFees_%"] > 0 ? -1 : 1)
+        maxout := ((bankmax / convrate) - (SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? SettingsYml["Shipping"] : 0)) * ((100 + SettingsYml["IntFees_%"]) / 100) ** (SettingsYml["IntFees_%"] > 0 ? -1 : 1)
         statusbar.SetText(altusd ? "Alt Rate" : floor(maxout), 4)
     }
     statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " toCur, 3)
+    convgui["toVal"].Delete()
     if convgui["fromVal"].Text ~= "[^\d.,]"
-        convgui["toVal"].Text := "Letters,commas and spaces not allowed"
+    ; convgui["toVal"].Text := "Letters,commas and spaces not allowed"
+        convgui["toVal"].add(["Letters,commas and spaces not allowed"])
     else if !convgui["fromVal"].Text
-        convgui["toVal"].Text := ""
+        convgui["toVal"].value := ""
     else {
         out := regexreplace(convgui["fromVal"].Text, "\.\d*|,")
         if toCur = baseCurrency {
@@ -71,18 +74,25 @@ calculateresult(*) {
             convtoutaIntFees := outaIntFees * convrate
             bankcomm := convtoutaIntFees * (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100)
             switch convgui["Overhead"].Text {
+                case "Convert": transportcomm := 0
                 case "Traveler", "T+T": transportcomm := instr(SettingsYml["Traveler_$"], "a") ? StrReplace(SettingsYml["Traveler_$"], "a") * altusd : SettingsYml["Traveler_$"] * bankusd
                 case "Shipping": transportcomm := SettingsYml["Shipping"] * (InStr(SettingsYml["Shipping"], "$") ? strreplace(bankusd, "$") : convrate)
                     bankcomm += transportcomm * SettingsYml["BankRate_%"] / 100
             }
-            localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * convrate * SettingsYml["LocalFees_%"] / 100
+            localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * (convrate / altfactor) * SettingsYml["LocalFees_%"] / 100
             total := convtoutaIntFees + (overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"])
-            SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? (convtoutaIntFees += transportcomm ?? 0, overhead -= transportcomm ?? 0) : ""
-            convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
+            direct := convtoutaIntFees + (SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? transportcomm : 0)
+            ; convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
+            convgui["toVal"].add([Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(total))), "Price: " ThousandsSep(round(out * convrate, 2)), "Price after tax: " ThousandsSep(round(convtoutaIntFees, 2))])
+            transportcomm ? convgui["toVal"].add(["Trasport Cost: " ThousandsSep(round(transportcomm, 2))]) : ''
+            (bankcomm > 0) ? convgui["toVal"].add(["Bank Commision: " ThousandsSep(round(bankcomm, 2))]) : ''
+            (localfeecent) or SettingsYml["LocalFees"] > 0 ? convgui["toVal"].add(["Local Fees: " ThousandsSep(round(localfeecent + SettingsYml["LocalFees"], 2))]) : ""
             if convtoutaIntFees > bankmax and !altusd
                 MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
         } else
-            convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(out * convrate)))
+        ; convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(out * convrate)))
+            convgui["toVal"].add([Format(outformat, toCur, ThousandsSep(round(out * convrate)))])
+        convgui["toVal"].choose(1)
     }
 }
 
