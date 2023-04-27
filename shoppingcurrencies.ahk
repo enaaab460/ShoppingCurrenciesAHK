@@ -2,7 +2,7 @@ SetWorkingDir A_WorkingDir
 #Include "Lib\select toolbox.ahk"
 DetectHiddenWindows 0
 
-updatedate := '26/4/23'
+updatedate := '27/4/23'
 
 A_TrayMenu.add("Converter", (*) => convgui.show())
 A_TrayMenu.default := "Converter"
@@ -138,8 +138,9 @@ f7:: {
 
 f8::
 chromeprice(*) {
-    WinActivate "ahk_exe chrome.exe"
-    currentlink := UIA_Chrome("ahk_exe chrome.exe").GetCurrentURL()
+    chrome := UIA_Chrome("ahk_exe chrome.exe")
+    (dev := chrome.ElementExist({ Name: "Toggle device toolbar", T: "Button" })) ? Send("F12{Sleep 300}") : ""
+    currentlink := chrome.GetCurrentURL()
     for currency, stores in Yaml("stores.yml")[1]
         if stores
             for store, query in stores {
@@ -184,7 +185,8 @@ chromeprice(*) {
             {}
         }
     )', MatchQ, minijs)
-    UIA_Chrome("A").JSExecute(jscmd)
+    WinActivate "ahk_exe chrome.exe"
+    chrome.JSExecute(jscmd)
     ; savemsg jscmd
 }
 
