@@ -1,5 +1,5 @@
 Alt_$: 0
-BankMax: 10000
+BankMax: 20000
 BankRate_%: 10
 Base: EGP
 Conversion: "<a href=\"http://www.floatrates.com/json-feeds.html\">RATES</a>"
