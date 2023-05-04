@@ -5,6 +5,7 @@ DetectHiddenWindows 0
 updatedate := '27/4/23'
 
 A_TrayMenu.add("Converter", (*) => convgui.show())
+A_TrayMenu.add("Settings", (*) => settingsgui.show())
 A_TrayMenu.default := "Converter"
 A_TrayMenu.ClickCount := 1
 
@@ -19,17 +20,20 @@ convgui.AddDropDownList("vOverhead yp x250 w120 choose1", ["Convert", "Shipping"
 convgui.AddComboBox("vtoVal xm w350")
 (statusbar := convgui.AddStatusBar('vStatus')).SetParts(20, 20, 240)
 statusbar.SetIcon(A_WinDir "\System32\" "dsuiext.dll", 36)
+statusbar.SetIcon(A_WinDir "\System32\" "comres.dll", 7, 3)
 statusbar.SetIcon("lib\youtube.png", , 2)
-statusbar.OnEvent("Click", (obj, info) => info = 1 ? (settingsgui.Show(), convgui.Hide()) : info = 2 ? run("https://youtu.be/qP5hBoRbKWc") : "")
+statusbar.OnEvent("Click", (obj, info) => info = 1 ? (settingsgui.Show(), convgui.Hide()) : info = 2 ? run("https://youtu.be/qP5hBoRbKWc") : info = 3 ? editcurgui.Show() : "")
 
 InitiateYml() {
     global
     SettingsYml := Yaml("settings.yml")[1]
     baseCurrency := SettingsYml["Base"]
     intCurrency := SettingsYml["INT"]
-    if (!FileExist("currency.json") or !instr(FileGetTime("currency.json", "M"), A_Year A_mon A_DD))
+    if !FileExist("currency.json") or !instr(FileGetTime("currency.json", "M"), A_Year A_mon A_DD) or InStr(FileRead("currency.json"), baseCurrency)
         Download "http://www.floatrates.com/daily/" baseCurrency ".json", "currency.json"
+    ; runwait "shoppingcurrencies.exe nbetoday.ahk"
     currencyjson := Yaml("currency.json")
+    baseCurrency = intCurrency ? currencyjson[Strlower(intCurrency)] := Map("inverseRate", 1) : ""
     bankusd := round(currencyjson[Strlower(intCurrency)]["inverseRate"], 2)
     altusd := SettingsYml["Alt_$"] > 0 ? SettingsYml["Alt_$"] : 0
     altfactor := altusd ? altusd / bankusd : 1
@@ -56,21 +60,19 @@ calculateresult(*) {
         convrate := currencyjson[StrLower(convgui["fromCur"].Text)]["inverseRate"] * altfactor
         outformat := "{} {}-{}"
         convgui["Overhead"].Enabled := 1
-        maxout := ((bankmax / convrate) - (SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? SettingsYml["Shipping"] : 0)) * ((100 + SettingsYml["IntFees_%"]) / 100) ** (SettingsYml["IntFees_%"] > 0 ? -1 : 1)
+        maxout := ((bankmax / convrate) - (SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? SettingsYml["Shipping"] : 0)) * ((100 + abs(SettingsYml["IntFees_%"])) / 100) ** (SettingsYml["IntFees_%"] > 0 ? -1 : 1)
         statusbar.SetText(altusd ? "Alt Rate" : floor(maxout), 4)
     }
     statusbar.SetText("1 " convgui["fromCur"].Text " = " round(convrate, 2) " " toCur, 3)
     convgui["toVal"].Delete()
     if convgui["fromVal"].Text ~= "[^\d.,]"
-    ; convgui["toVal"].Text := "Letters,commas and spaces not allowed"
         convgui["toVal"].add(["Letters,commas and spaces not allowed"])
     else if !convgui["fromVal"].Text
         convgui["toVal"].value := ""
     else {
         out := regexreplace(convgui["fromVal"].Text, "\.\d*|,")
         if toCur = baseCurrency {
-            intFees := SettingsYml["IntFees_%"] >= 0 ? out * SettingsYml["IntFees_%"] / 100 : out * -(SettingsYml["IntFees_%"] / (100 + SettingsYml["IntFees_%"]))
-            outaIntFees := out + intFees
+            outaIntFees := out * ((1 + (abs(SettingsYml["IntFees_%"]) / 100)) ** (SettingsYml["IntFees_%"] >= 0 ? 1 : -1))
             convtoutaIntFees := outaIntFees * convrate
             bankcomm := convtoutaIntFees * (altfactor > 1 ? 0 : SettingsYml["BankRate_%"] / 100)
             switch convgui["Overhead"].Text {
@@ -82,15 +84,14 @@ calculateresult(*) {
             localfeecent := convgui["Overhead"].Text = "Traveler" ? 0 : outaIntFees * (convrate / altfactor) * SettingsYml["LocalFees_%"] / 100
             total := convtoutaIntFees + (overhead := bankcomm + (transportcomm ?? 0) + localfeecent + SettingsYml["LocalFees"])
             direct := convtoutaIntFees + (SettingsYml["ShipNow"] and convgui["Overhead"].Text = "Shipping" ? transportcomm : 0)
-            ; convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(convtoutaIntFees)), ThousandsSep(round(total)))
-            convgui["toVal"].add([Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(total))), "Price: " ThousandsSep(round(out * convrate, 2)), "Price after tax: " ThousandsSep(round(convtoutaIntFees, 2))])
+            convgui["toVal"].add([Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(total))), "Price after tax: " ThousandsSep(round(convtoutaIntFees, 2))])
+            ; convgui["toVal"].add([Format(outformat, toCur, ThousandsSep(round(direct)), ThousandsSep(round(total))),,])
             transportcomm ? convgui["toVal"].add(["Trasport Cost: " ThousandsSep(round(transportcomm, 2))]) : ''
             (bankcomm > 0) ? convgui["toVal"].add(["Bank Commision: " ThousandsSep(round(bankcomm, 2))]) : ''
             (localfeecent) or SettingsYml["LocalFees"] > 0 ? convgui["toVal"].add(["Local Fees: " ThousandsSep(round(localfeecent + SettingsYml["LocalFees"], 2))]) : ""
-            if convtoutaIntFees > bankmax and !altusd
+            if outaIntFees > maxout and !altusd
                 MsgBox "Price exceeds maximum exchange allowed by bank, change to altrate", , 48
         } else
-        ; convgui["toVal"].Text := Format(outformat, toCur, ThousandsSep(round(out * convrate)))
             convgui["toVal"].add([Format(outformat, toCur, ThousandsSep(round(out * convrate)))])
         convgui["toVal"].choose(1)
     }
@@ -129,9 +130,32 @@ Saveset(*) {
     settingsgui.Hide()
 }
 
+editcurgui := Gui()
+editcurgui.SetFont("S14")
+editcurgui.AddRadio("vCur Checked", baseCurrency)
+editcurgui.AddRadio("x+50", convgui["fromCur"].Text)
+editcurgui.AddEdit("y+5 xm w200 vCurValue")
+editcurgui.AddButton("y+5 xm+60", "Save").OnEvent("Click", editcur)
+editcur(*) {
+    input := editcurgui.Submit(1)
+    (input.cur = 1) ? (input.curvalue := 1/ input.curvalue) : ""
+    currencyjson[strlower(convgui["fromCur"].Text)]["inverseRate"] := input.curvalue
+    calculateresult()
+}
+
 #HotIf WinActive("ahk_exe chrome.exe")
+
 f7:: {
-    convgui["fromVal"].Text := RegExReplace(copynow(, 0.2), "[^\d,.]"), calculateresult()
+    static currencysymbols := Yaml("Common-Currency.json")
+    A_Clipboard := cn := StrReplace(copynow(, 0.2), "`r`n")
+    if RegExMatch(cn, "[^\d., ]+", &regex)
+        for cur in currencylist
+            if regex[0] = "$"
+                convgui["fromCur"].choose("USD")
+    else if regex[0] = currencysymbols[cur]["symbol"] or regex[0] = currencysymbols[cur]["symbol_native"]
+        match := convgui["fromCur"].choose(cur)
+    cn := RegExReplace(cn, ",(\d{2})\D+", ".$1")
+    convgui["fromVal"].Text := RegExReplace(cn, "[^\d,.]"), calculateresult()
     convgui.Show()
     KeyWait(ThisHotkey, "t0.3")
 }
@@ -192,7 +216,7 @@ chromeprice(*) {
 
 f9:: {
     WinActivate "ahk_exe chrome.exe"
-    chrome := UIA_Chrome("ahk_exe chrome.exe")
+    chrome := UIA_Chrome("A")
     RegExMatch(chrome.GetCurrentURL(), "U)https?:\/\/(?:www\.)?(?<host>[\w.]+)\/", &urlregex)
     send "^C"
     sleep 400

@@ -91,3 +91,30 @@ FileOverwrite(Text,Filename){
 
 ThousandsSep(x, s := ",") => RegExReplace(x, "\G\d+?(?=(\d{3})+(?:\D|$))", "$0" s)
 
+
+httprequest(url, mode := "GET", header := "") {
+	if !InStr(url, "http")
+		url := "http://" url
+	whr := ComObject("WinHttp.WinHttpRequest.5.1")
+	whr.Open(mode, url, true)
+	header = "Chrome" ? whr.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36") : ""
+	whr.Send()
+	whr.WaitForResponse()
+	version := whr.ResponseText
+	return version
+}
+
+OnlineJson(url, query := "") {
+	version := httprequest(url)
+	jsonobject := Yaml(version)
+	if (query) {
+		match := jsonobject.query
+		If match
+			return match
+		else {
+			msgResult := MsgBox("Continue?", "JSON query not found", 4)
+			(msgResult = "No") ? Exit() : ""
+		}
+	} else
+		return jsonobject
+}
