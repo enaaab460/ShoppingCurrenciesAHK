@@ -4,6 +4,8 @@ Allows easy comparison of prices between local and international online shops Ba
 Uses a portable Autohotkey executable renamed to match the script's name
 You can download [Autohotkey v2](https://www.autohotkey.com/) directly to avoid using the portable executable.
 
+Common currencies's symbols from https://gist.github.com/ksafranski/2973986
+
 Uses http://www.floatrates.com/json-feeds.html for currency conversion rates table
 
 Arabic showcase on [youtube](https://youtu.be/qP5hBoRbKWc)
